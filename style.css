@@ -204,11 +204,17 @@ textarea,
   color: var(--green-dark);
 }
 
-body.map-picking #map {
+body.map-picking #map,
+body.map-drawing #map {
   cursor: crosshair;
 }
 
-.map-pick-banner {
+body.map-drawing.map-draw-editing #map {
+  cursor: grab;
+}
+
+.map-pick-banner,
+.map-draw-banner {
   position: absolute;
   top: 12px;
   left: 50%;
@@ -216,9 +222,9 @@ body.map-picking #map {
   z-index: 1200;
   display: none;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  background: rgba(15, 23, 42, 0.88);
+  gap: 8px;
+  padding: 7px 12px;
+  background: rgba(15, 23, 42, 0.9);
   color: #ffffff;
   font-size: 12.5px;
   font-weight: 600;
@@ -226,10 +232,109 @@ body.map-picking #map {
   box-shadow: 0 6px 20px rgba(15, 23, 42, 0.28);
   white-space: nowrap;
   max-width: calc(100vw - 24px);
+  overflow-x: auto;
 }
 
-body.map-picking .map-pick-banner {
+body.map-picking .map-pick-banner,
+body.map-drawing .map-draw-banner {
   display: inline-flex;
+}
+
+.map-draw-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.map-draw-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.map-draw-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.map-draw-btn.is-done {
+  background: #16a34a;
+}
+
+.map-draw-btn.is-done:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.draw-vertex-icon {
+  background: transparent;
+  border: none;
+}
+
+.draw-vertex-dot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 3px solid #2563eb;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.45);
+  cursor: move;
+}
+
+.draw-vertex-dot.is-first {
+  width: 16px;
+  height: 16px;
+  border-color: #16a34a;
+  background: #dcfce7;
+}
+
+.draw-midpoint-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(37, 99, 235, 0.72);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.draw-midpoint-dot:hover {
+  transform: scale(1.25);
+  border-color: #1d4ed8;
+  background: #dbeafe;
+}
+
+.draw-vertex-popup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.draw-vertex-delete-btn {
+  border: none;
+  background: #dc2626;
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.draw-vertex-delete-btn:hover {
+  background: #b91c1c;
+}
+
+.info-action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .map-pick-cancel {
@@ -691,6 +796,30 @@ body.map-fullscreen .map-wrap {
 
 .leaflet-locate-btn.is-loading svg {
   animation: spin 0.9s linear infinite;
+}
+
+.leaflet-draw-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #1e293b;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.leaflet-draw-btn:hover {
+  background: #f8fafc;
+  color: #2563eb;
+}
+
+.leaflet-draw-btn.is-active {
+  background: #eff6ff;
+  color: #2563eb;
 }
 
 @keyframes fadeSlideUp {

@@ -134,7 +134,12 @@
           </button>
         </div>
 
-        <div id="plotPanel" class="search-panel" role="tabpanel" aria-labelledby="tabPlotBtn">
+        <div
+          id="plotPanel"
+          class="search-panel"
+          role="tabpanel"
+          aria-labelledby="tabPlotBtn"
+        >
           <div class="field">
             <label for="wardSelect">Xã / Phường</label>
             <select id="wardSelect"></select>
@@ -159,9 +164,17 @@
           <button id="searchBtn" class="btn">Tra cứu &amp; Xem bản đồ</button>
         </div>
 
-        <div id="coordPanel" class="search-panel" role="tabpanel" aria-labelledby="tabCoordBtn" hidden>
+        <div
+          id="coordPanel"
+          class="search-panel"
+          role="tabpanel"
+          aria-labelledby="tabCoordBtn"
+          hidden
+        >
           <div class="field">
-            <label for="coordWardSelect">Xã / Phường (đã có dữ liệu tọa độ)</label>
+            <label for="coordWardSelect"
+              >Xã / Phường (đã có dữ liệu tọa độ)</label
+            >
             <select id="coordWardSelect"></select>
             <span class="hint" id="coordWardHint"></span>
           </div>
@@ -188,7 +201,9 @@
           </div>
 
           <div class="coord-actions">
-            <button id="coordSearchBtn" class="btn" type="button">Tra cứu tọa độ</button>
+            <button id="coordSearchBtn" class="btn" type="button">
+              Tra cứu tọa độ
+            </button>
             <div class="coord-sub-actions">
               <button
                 id="currentLocationBtn"
@@ -196,7 +211,17 @@
                 type="button"
                 title="Lấy tọa độ GPS hiện tại"
               >
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="15"
+                  height="15"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
                   <circle cx="12" cy="12" r="3"></circle>
                   <path d="M12 2v3"></path>
                   <path d="M12 19v3"></path>
@@ -253,18 +278,56 @@
         </p>
 
         <div id="infoContent" class="info-content" hidden>
-          <button
-            id="shareLinkBtn"
-            class="btn btn-outline btn-with-icon share-link-btn"
-            type="button"
-            disabled
-          >
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-            </svg>
-            <span>Chia sẻ link thửa đất</span>
-          </button>
+          <div class="info-action-row">
+            <button
+              id="shareLinkBtn"
+              class="btn btn-outline btn-with-icon share-link-btn"
+              type="button"
+              disabled
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="15"
+                height="15"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.1"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path
+                  d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+                ></path>
+                <path
+                  d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+                ></path>
+              </svg>
+              <span>Chia sẻ link</span>
+            </button>
+            <button
+              id="redrawParcelBtn"
+              class="btn btn-outline btn-with-icon share-link-btn"
+              type="button"
+              disabled
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="15"
+                height="15"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.1"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+              </svg>
+              <span>Vẽ lại </span>
+            </button>
+          </div>
 
           <div class="info-grid">
             <div class="info-box full">
@@ -352,7 +415,31 @@
       <div id="map"></div>
       <div id="mapPickBanner" class="map-pick-banner" role="status">
         <span>Chạm vào vị trí thửa đất trên bản đồ</span>
-        <button id="cancelPickBtn" class="map-pick-cancel" type="button">Hủy</button>
+        <button id="cancelPickBtn" class="map-pick-cancel" type="button">
+          Hủy
+        </button>
+      </div>
+      <div id="mapDrawBanner" class="map-draw-banner" role="status">
+        <span id="mapDrawStatus">Vẽ thửa: 0 đỉnh</span>
+        <button
+          id="bannerUndoDrawBtn"
+          class="map-draw-btn"
+          type="button"
+          disabled
+        >
+          Hoàn tác
+        </button>
+        <button
+          id="bannerFinishDrawBtn"
+          class="map-draw-btn is-done"
+          type="button"
+          disabled
+        >
+          Xong
+        </button>
+        <button id="bannerCancelDrawBtn" class="map-draw-btn" type="button">
+          Hủy vẽ
+        </button>
       </div>
       <button
         id="mapFullscreenBtn"
@@ -381,9 +468,23 @@
           title="Chia sẻ link thửa đất"
           aria-label="Chia sẻ link thửa đất"
         >
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          <svg
+            viewBox="0 0 24 24"
+            width="15"
+            height="15"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.1"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path
+              d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+            ></path>
+            <path
+              d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+            ></path>
           </svg>
         </button>
         <button
@@ -407,7 +508,7 @@
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       crossorigin=""
     ></script>
-    <script src="./catalog.js"></script>
+    <script src="./new_sheets/manifest.js"></script>
     <script src="./spatial_tiles/manifest.js"></script>
     <script src="./old_sheets/manifest.js"></script>
     <script src="./old_spatial_tiles/manifest.js"></script>
@@ -462,13 +563,21 @@
 
       const parcelLayerGroup = L.layerGroup().addTo(map);
       const gpsLayerGroup = L.layerGroup().addTo(map);
+      const drawLayerGroup = L.layerGroup().addTo(map);
 
       let mapLocateBtnEl = null;
       const LocateControl = L.Control.extend({
         options: { position: "topleft" },
         onAdd() {
-          const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
-          const btn = L.DomUtil.create("button", "leaflet-locate-btn", container);
+          const container = L.DomUtil.create(
+            "div",
+            "leaflet-bar leaflet-control",
+          );
+          const btn = L.DomUtil.create(
+            "button",
+            "leaflet-locate-btn",
+            container,
+          );
           btn.type = "button";
           btn.title = "Lấy vị trí hiện tại";
           btn.setAttribute("aria-label", "Lấy vị trí hiện tại");
@@ -485,6 +594,31 @@
       });
       new LocateControl().addTo(map);
 
+      let mapDrawBtnEl = null;
+      const DrawControl = L.Control.extend({
+        options: { position: "topleft" },
+        onAdd() {
+          const container = L.DomUtil.create(
+            "div",
+            "leaflet-bar leaflet-control",
+          );
+          const btn = L.DomUtil.create("button", "leaflet-draw-btn", container);
+          btn.type = "button";
+          btn.title = "Vẽ polygon thửa đất trên bản đồ";
+          btn.setAttribute("aria-label", "Vẽ polygon thửa đất trên bản đồ");
+          btn.innerHTML =
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>';
+          L.DomEvent.disableClickPropagation(container);
+          L.DomEvent.on(btn, "click", (ev) => {
+            L.DomEvent.stop(ev);
+            setMapDrawing(!drawModeActive);
+          });
+          mapDrawBtnEl = btn;
+          return container;
+        },
+      });
+      new DrawControl().addTo(map);
+
       const wardSelectEl = document.getElementById("wardSelect");
       const wardHintEl = document.getElementById("wardHint");
       const sheetInputEl = document.getElementById("sheetInput");
@@ -496,12 +630,21 @@
       const tabCoordBtnEl = document.getElementById("tabCoordBtn");
       const plotPanelEl = document.getElementById("plotPanel");
       const coordPanelEl = document.getElementById("coordPanel");
+      const mapDrawStatusEl = document.getElementById("mapDrawStatus");
+      const bannerUndoDrawBtnEl = document.getElementById("bannerUndoDrawBtn");
+      const bannerFinishDrawBtnEl = document.getElementById(
+        "bannerFinishDrawBtn",
+      );
+      const bannerCancelDrawBtnEl = document.getElementById(
+        "bannerCancelDrawBtn",
+      );
       const coordWardSelectEl = document.getElementById("coordWardSelect");
       const coordWardHintEl = document.getElementById("coordWardHint");
       const lngInputEl = document.getElementById("lngInput");
       const latInputEl = document.getElementById("latInput");
       const coordSearchBtnEl = document.getElementById("coordSearchBtn");
-      const currentLocationBtnEl = document.getElementById("currentLocationBtn");
+      const currentLocationBtnEl =
+        document.getElementById("currentLocationBtn");
       const pickOnMapBtnEl = document.getElementById("pickOnMapBtn");
       const cancelPickBtnEl = document.getElementById("cancelPickBtn");
       const statusBoxEl = document.getElementById("statusBox");
@@ -537,6 +680,7 @@
       const mobileDetailBtnEl = document.getElementById("mobileDetailBtn");
       const mobileShareBtnEl = document.getElementById("mobileShareBtn");
       const shareLinkBtnEl = document.getElementById("shareLinkBtn");
+      const redrawParcelBtnEl = document.getElementById("redrawParcelBtn");
       const mobileReSearchBtnEl = document.getElementById("mobileReSearchBtn");
 
       function refreshMapSize() {
@@ -598,200 +742,10 @@
         refreshMapSize();
       }
 
-      const PARCEL_API_URL =
-        "https://apidgn.thongtin.land/v1/dgn-data/app-call/search/page-and-plot/location-new";
-
-      let sheetsByWard = {};
-      let wardsById = {};
-
-      function safeFloat(value) {
-        if (value === null || value === undefined || value === "") return null;
-        if (typeof value === "number")
-          return Number.isFinite(value) ? value : null;
-        const num = Number(String(value).trim().replace(",", "."));
-        return Number.isFinite(num) ? num : null;
-      }
-
-      function parseGeometryObject(rawGeo) {
-        if (rawGeo && typeof rawGeo === "object") {
-          return [JSON.stringify(rawGeo), rawGeo];
-        }
-        if (typeof rawGeo === "string") {
-          const geoStr = rawGeo.trim();
-          if (!geoStr) return ["", null];
-          try {
-            const parsed = JSON.parse(geoStr);
-            return [
-              geoStr,
-              parsed && typeof parsed === "object" && !Array.isArray(parsed)
-                ? parsed
-                : null,
-            ];
-          } catch {
-            return [geoStr, null];
-          }
-        }
-        return ["", null];
-      }
-
-      function extractParcel(dl, wardId, wardAddress, sheet, plotStr) {
-        const rawPlot = dl.number_plot;
-        let soThua = plotStr;
-        if (
-          rawPlot !== null &&
-          rawPlot !== undefined &&
-          String(rawPlot).trim() !== ""
-        ) {
-          soThua = String(rawPlot).trim();
-        } else if (
-          dl.text !== null &&
-          dl.text !== undefined &&
-          String(dl.text).trim() !== ""
-        ) {
-          soThua = String(dl.text).trim();
-        }
-
-        const [polygonGeojson, geometryObj] = parseGeometryObject(
-          dl.geojsonwgs84,
-        );
-
-        return {
-          xa_phuong: String(dl.address || wardAddress || "").trim(),
-          ward_id: String(
-            dl.idxa !== null && dl.idxa !== undefined && dl.idxa !== ""
-              ? dl.idxa
-              : wardId,
-          ).trim(),
-          so_to: String(
-            dl.number_page || sheet.nameString.toUpperCase(),
-          ).trim(),
-          so_thua: soThua,
-          loai_dat: String(dl.code || "").trim(),
-          dien_tich: safeFloat(dl.area),
-          dien_tich_m2: safeFloat(dl.area_m2),
-          polygon_geojson: polygonGeojson,
-          geometry_obj: geometryObj,
-        };
-      }
-
-      function sleep(ms) {
-        return new Promise((resolve) => setTimeout(resolve, ms));
-      }
-
-      async function lookupParcelDirect(wardId, sheet, plotStr) {
-        const wardAddress = wardsById[wardId]?.address || "";
-        const payload = {
-          layerId: sheet.dgnLayerId,
-          year: 2026,
-          number_page: null,
-          number_plot: plotStr,
-          provinceId: "80",
-          districtId: null,
-          wardId: String(wardId),
-          view: true,
-          name_thua: sheet.nameString,
-          seeQH: false,
-        };
-
-        const maxAttempts = 5;
-        let lastError = "Không thể kết nối tới API tra cứu.";
-
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-          if (attempt > 1) {
-            setStatus(
-              "loading",
-              `API phản hồi chậm, đang thử lại (${attempt}/${maxAttempts}): ${sheet.nameString.toUpperCase()}, thửa ${plotStr}...`,
-            );
-            await sleep(Math.min(700 * (attempt - 1), 2500));
-          }
-
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 20000);
-          try {
-            const resp = await fetch(PARCEL_API_URL, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload),
-              signal: controller.signal,
-            });
-            clearTimeout(timer);
-
-            if (resp.status === 401 || resp.status === 403) {
-              throw new Error(`API yêu cầu xác thực (HTTP ${resp.status}).`);
-            }
-
-            let data = null;
-            try {
-              data = await resp.json();
-            } catch {
-              data = null;
-            }
-
-            if (resp.status === 429) {
-              lastError = "API đang giới hạn tần suất (HTTP 429).";
-              await sleep(2500);
-              continue;
-            }
-
-            if (
-              resp.status >= 500 ||
-              (resp.status !== 200 &&
-                resp.status !== 201 &&
-                resp.status !== 404)
-            ) {
-              lastError = `Lỗi máy chủ API (HTTP ${resp.status}).`;
-              continue;
-            }
-
-            if (!data || typeof data !== "object") {
-              lastError = "Phản hồi từ API không đúng định dạng JSON.";
-              continue;
-            }
-
-            const msg = String(data.message || "").trim();
-            if (data.statusCode === 401 || data.statusCode === 403) {
-              throw new Error(`Lỗi xác thực API (${data.statusCode}): ${msg}`);
-            }
-
-            const dl = data.dataLocation;
-            if (data.success === true && dl && typeof dl === "object") {
-              return {
-                found: true,
-                parcel: extractParcel(dl, wardId, wardAddress, sheet, plotStr),
-                meta: {
-                  id: dl.id,
-                  location: dl.location,
-                  point: dl.point,
-                  arrYear: dl.arrYear,
-                  dgnLayerId: sheet.dgnLayerId,
-                  nameString: sheet.nameString,
-                },
-              };
-            }
-
-            if (
-              (data.success === false && msg === "Khong tim thay thong tin!") ||
-              (data.success === true && dl == null)
-            ) {
-              return {
-                found: false,
-                message: msg || "Khong tim thay thong tin!",
-              };
-            }
-
-            lastError = msg || `Phản hồi lỗi tạm thời từ API.`;
-          } catch (err) {
-            clearTimeout(timer);
-            if (err.message && err.message.includes("xác thực")) throw err;
-            lastError =
-              err.name === "AbortError"
-                ? "Quá thời gian chờ phản hồi API."
-                : err.message;
-          }
-        }
-
-        throw new Error(lastError);
-      }
+      let newWardsById = {};
+      let oldWardsByKey = {};
+      let oldSpatialWardsByKey = {};
+      let searchEra = "new";
 
       function escapeHtml(text) {
         const div = document.createElement("div");
@@ -812,24 +766,21 @@
         statusBoxEl.textContent = msg;
       }
 
-      let searchEra = "new";
-      let oldWardsByKey = {};
-      let oldSpatialWardsByKey = {};
-
       function findSheetInWard(wardId, rawInput) {
-        const sheets = sheetsByWard[wardId] || [];
+        const sheets = newWardsById[wardId]?.sheets || [];
         const text = String(rawInput || "")
           .trim()
           .toLowerCase();
-        if (!text) return null;
+        if (!text || !sheets.length) return null;
 
         // Cho phép nhập "71", "dc71", "DC071"...
-        const numText = text.replace(/^dc/i, "").replace(/^0+/, "") || text;
-
+        const stripped = text.replace(/^dc/i, "").replace(/^0+/, "") || text;
         return (
-          sheets.find((s) => s.nameString.toLowerCase() === text) ||
+          sheets.find((s) => s.toLowerCase() === text) ||
           sheets.find(
-            (s) => s.nameNumber != null && String(s.nameNumber) === numText,
+            (s) =>
+              (s.replace(/^dc/i, "").replace(/^0+/, "") || s).toLowerCase() ===
+              stripped,
           ) ||
           null
         );
@@ -838,12 +789,16 @@
       function findOldSheet(oldKey, rawInput) {
         const w = oldWardsByKey[oldKey];
         const sheets = w?.sheets || [];
-        const text = String(rawInput || "").trim().toLowerCase();
+        const text = String(rawInput || "")
+          .trim()
+          .toLowerCase();
         if (!text || !sheets.length) return null;
         const stripped = text.replace(/^dc/i, "").replace(/^0+/, "") || text;
         return (
           sheets.find((s) => s.toLowerCase() === text) ||
-          sheets.find((s) => (s.replace(/^0+/, "") || s).toLowerCase() === stripped) ||
+          sheets.find(
+            (s) => (s.replace(/^0+/, "") || s).toLowerCase() === stripped,
+          ) ||
           null
         );
       }
@@ -852,7 +807,8 @@
         if (searchEra === "old") {
           const w = oldWardsByKey[wardSelectEl.value];
           if (!w || !w.sheets?.length) {
-            wardHintEl.textContent = "Chưa có dữ liệu tờ bản đồ trước sáp nhập.";
+            wardHintEl.textContent =
+              "Chưa có dữ liệu tờ bản đồ trước sáp nhập.";
             return;
           }
           const min = w.sheets[0];
@@ -861,20 +817,23 @@
           return;
         }
 
-        const sheets = sheetsByWard[wardSelectEl.value] || [];
+        const w = newWardsById[wardSelectEl.value];
+        const sheets = w?.sheets || [];
         if (!sheets.length) {
-          wardHintEl.textContent = "";
+          wardHintEl.textContent = "Chưa có dữ liệu tờ bản đồ tĩnh.";
           return;
         }
 
-        const nums = sheets.map((s) => s.nameNumber).filter((n) => n != null);
-        if (nums.length) {
-          const min = Math.min(...nums);
-          const max = Math.max(...nums);
-          wardHintEl.textContent = `Có ${sheets.length} tờ bản đồ (từ tờ ${min} đến ${max})`;
-        } else {
-          wardHintEl.textContent = `Có ${sheets.length} tờ bản đồ`;
-        }
+        const nums = sheets
+          .map((s) => {
+            const m = s.match(/\d+/);
+            return m ? Number(m[0]) : null;
+          })
+          .filter((n) => n != null);
+        const rangeText = nums.length
+          ? ` (từ tờ ${Math.min(...nums)} đến ${Math.max(...nums)})`
+          : "";
+        wardHintEl.textContent = `Có ${sheets.length} tờ bản đồ${rangeText} • ${w.parcelCount.toLocaleString("vi-VN")} thửa`;
       }
 
       function formatWktRing(ring) {
@@ -889,7 +848,11 @@
       }
 
       function geometryToWkt(geom) {
-        if (!geom || typeof geom !== "object" || !Array.isArray(geom.coordinates)) {
+        if (
+          !geom ||
+          typeof geom !== "object" ||
+          !Array.isArray(geom.coordinates)
+        ) {
           return "";
         }
         if (geom.type === "Polygon") {
@@ -958,9 +921,14 @@
 
         currentShareState = meta.share || null;
         shareLinkBtnEl.disabled = !currentShareState;
+        mobileShareBtnEl.hidden = !currentShareState;
+        currentParcelData = p;
+        currentParcelMeta = meta;
+        redrawParcelBtnEl.disabled = !p.geometry_obj;
         if (currentShareState) {
           syncBrowserShareUrl();
         }
+        drawLayerGroup.clearLayers();
 
         document.body.classList.add("has-parcel-result");
         const titleText = `Tờ ${p.so_to} - Thửa ${p.so_thua}`;
@@ -981,7 +949,11 @@
 
         parcelLayerGroup.clearLayers();
         if (p.geometry_obj) {
-          const polyColor = meta.era === "old" ? "#d97706" : "#22c55e";
+          const polyColor = meta.isDrawn
+            ? "#2563eb"
+            : meta.era === "old"
+              ? "#d97706"
+              : "#22c55e";
           const geoLayer = L.geoJSON(
             { type: "Feature", geometry: p.geometry_obj, properties: p },
             {
@@ -998,8 +970,16 @@
           const qhRow = p.quy_hoach
             ? `<div><b>Quy hoạch:</b> ${escapeHtml(p.quy_hoach)}</div>`
             : "";
-          const titleColor = meta.era === "old" ? "#b45309" : "#15803d";
-          const eraTag = meta.era === "old" ? " (Trước sáp nhập)" : "";
+          const titleColor = meta.isDrawn
+            ? "#1d4ed8"
+            : meta.era === "old"
+              ? "#b45309"
+              : "#15803d";
+          const eraTag = meta.isDrawn
+            ? " (Vẽ lại)"
+            : meta.era === "old"
+              ? " (Trước sáp nhập)"
+              : "";
           const popupHtml = `
           <div style="font-size:13px;line-height:1.5;min-width:160px;">
             <div style="font-weight:700;color:${titleColor};margin-bottom:4px;">
@@ -1059,6 +1039,13 @@
       const dynamicScriptPromises = new Map();
       let spatialWardsById = {};
       let mapPickActive = false;
+      let drawModeActive = false;
+      let drawEditExisting = false;
+      let drawPoints = [];
+      let drawHistory = [];
+      let currentParcelData = null;
+      let currentParcelMeta = null;
+      let drawnBaseMeta = null;
 
       function switchSearchTab(mode) {
         const isCoord = mode === "coord";
@@ -1072,12 +1059,362 @@
       }
 
       function setMapPicking(active) {
+        if (active && drawModeActive) setMapDrawing(false);
         mapPickActive = active;
         document.body.classList.toggle("map-picking", active);
         pickOnMapBtnEl.classList.toggle("btn-pick-active", active);
         if (active && isCompactViewport()) {
           closeMobileModals();
         }
+      }
+
+      function computeRingAreaM2(ringLngLat) {
+        if (!Array.isArray(ringLngLat) || ringLngLat.length < 3) return 0;
+        const R = 6378137;
+        const rad = Math.PI / 180;
+        let area = 0;
+        for (let i = 0; i < ringLngLat.length; i++) {
+          const p1 = ringLngLat[i];
+          const p2 = ringLngLat[(i + 1) % ringLngLat.length];
+          area +=
+            (p2[0] - p1[0]) *
+            rad *
+            (2 + Math.sin(p1[1] * rad) + Math.sin(p2[1] * rad));
+        }
+        return Math.abs((area * R * R) / 2);
+      }
+
+      function buildDrawnPolygonState(pts) {
+        const ring = pts.map(([lat, lng]) => [
+          Number(lng.toFixed(6)),
+          Number(lat.toFixed(6)),
+        ]);
+        const closedRing = [...ring, ring[0]];
+        const areaM2 = Math.round(computeRingAreaM2(ring) * 10) / 10;
+        const geomObj = { type: "Polygon", coordinates: [closedRing] };
+        const center = computeGeometryCenter(geomObj);
+        return { geomObj, areaM2, center };
+      }
+
+      function pushDrawHistory() {
+        drawHistory.push(drawPoints.map(([lat, lng]) => [lat, lng]));
+        if (drawHistory.length > 50) drawHistory.shift();
+      }
+
+      function updateDrawUiStats() {
+        const n = drawPoints.length;
+        const canFinish = n >= 3;
+        bannerUndoDrawBtnEl.disabled = drawHistory.length === 0;
+        bannerFinishDrawBtnEl.disabled = !canFinish;
+
+        const prefix = drawEditExisting ? "Sửa góc" : "Vẽ mới";
+        let summary = `${prefix}: ${n} đỉnh (chạm bản đồ để thêm)`;
+        if (canFinish) {
+          const { areaM2 } = buildDrawnPolygonState(drawPoints);
+          summary = `${prefix}: ${n} đỉnh • ~${formatNumber(areaM2)} m²`;
+        }
+        mapDrawStatusEl.textContent = summary;
+      }
+
+      function syncLiveOutputsDuringEdit() {
+        if (drawPoints.length < 3) return;
+        const { geomObj, areaM2, center } = buildDrawnPolygonState(drawPoints);
+        geoOutputEl.value = JSON.stringify(geomObj);
+        wktOutputEl.value = geometryToWkt(geomObj);
+        copyBtnEl.disabled = false;
+        copyWktBtnEl.disabled = false;
+        document.getElementById("valDienTich").textContent =
+          `${formatNumber(areaM2)} m²`;
+        document.getElementById("valDienTichM2").textContent =
+          `${formatNumber(areaM2)} m²`;
+        if (center) {
+          document.getElementById("valCenter").textContent =
+            `${center.y.toFixed(6)}, ${center.x.toFixed(6)}`;
+        }
+      }
+
+      function deleteDrawVertex(idx) {
+        if (drawEditExisting && drawPoints.length <= 3) {
+          setStatus("warn", "Thửa đất cần tối thiểu 3 đỉnh.");
+          return;
+        }
+        pushDrawHistory();
+        drawPoints.splice(idx, 1);
+        renderDrawPreview();
+        syncLiveOutputsDuringEdit();
+      }
+
+      function renderDrawPreview() {
+        drawLayerGroup.clearLayers();
+        let previewShape = null;
+        if (drawPoints.length >= 3) {
+          previewShape = L.polygon(drawPoints, {
+            interactive: false,
+            color: "#2563eb",
+            weight: 2.5,
+            dashArray: "6 4",
+            fillColor: "#3b82f6",
+            fillOpacity: 0.22,
+          }).addTo(drawLayerGroup);
+        } else if (drawPoints.length === 2) {
+          previewShape = L.polyline(drawPoints, {
+            interactive: false,
+            color: "#2563eb",
+            weight: 2.5,
+            dashArray: "6 4",
+          }).addTo(drawLayerGroup);
+        }
+
+        // Chấm trung điểm giữa các cạnh để chèn thêm đỉnh mới đúng cạnh mà không bị vắt chéo
+        if (drawPoints.length >= 3) {
+          const total = drawPoints.length;
+          for (let i = 0; i < total; i++) {
+            const p1 = drawPoints[i];
+            const p2 = drawPoints[(i + 1) % total];
+            const midPt = [(p1[0] + p2[0]) * 0.5, (p1[1] + p2[1]) * 0.5];
+            const midMarker = L.marker(midPt, {
+              draggable: true,
+              zIndexOffset: 50,
+              icon: L.divIcon({
+                className: "draw-vertex-icon",
+                html: '<span class="draw-midpoint-dot" title="Kéo hoặc chạm để thêm đỉnh trên cạnh này"></span>',
+                iconSize: [12, 12],
+                iconAnchor: [6, 6],
+              }),
+            }).addTo(drawLayerGroup);
+
+            let insertedIdx = -1;
+            midMarker.on("dragstart", (ev) => {
+              pushDrawHistory();
+              const ll = ev.target.getLatLng();
+              insertedIdx = i + 1;
+              drawPoints.splice(insertedIdx, 0, [ll.lat, ll.lng]);
+              if (previewShape) previewShape.setLatLngs(drawPoints);
+            });
+            midMarker.on("drag", (ev) => {
+              if (insertedIdx === -1) return;
+              const ll = ev.target.getLatLng();
+              drawPoints[insertedIdx] = [ll.lat, ll.lng];
+              if (previewShape) previewShape.setLatLngs(drawPoints);
+              updateDrawUiStats();
+              syncLiveOutputsDuringEdit();
+            });
+            midMarker.on("dragend", () => {
+              insertedIdx = -1;
+              renderDrawPreview();
+              syncLiveOutputsDuringEdit();
+            });
+            midMarker.on("click", (ev) => {
+              L.DomEvent.stopPropagation(ev);
+              pushDrawHistory();
+              drawPoints.splice(i + 1, 0, midPt);
+              renderDrawPreview();
+              syncLiveOutputsDuringEdit();
+            });
+          }
+        }
+
+        drawPoints.forEach((pt, idx) => {
+          const isFirstFresh = !drawEditExisting && idx === 0;
+          const marker = L.marker(pt, {
+            draggable: true,
+            zIndexOffset: 200,
+            icon: L.divIcon({
+              className: "draw-vertex-icon",
+              html: `<span class="draw-vertex-dot${isFirstFresh ? " is-first" : ""}"></span>`,
+              iconSize: [16, 16],
+              iconAnchor: [8, 8],
+            }),
+          }).addTo(drawLayerGroup);
+
+          marker.on("dragstart", () => {
+            pushDrawHistory();
+          });
+
+          marker.on("drag", (ev) => {
+            const ll = ev.target.getLatLng();
+            drawPoints[idx] = [ll.lat, ll.lng];
+            if (previewShape) {
+              previewShape.setLatLngs(drawPoints);
+            }
+            updateDrawUiStats();
+            syncLiveOutputsDuringEdit();
+          });
+
+          marker.on("dragend", () => {
+            renderDrawPreview();
+          });
+
+          marker.on("click", (ev) => {
+            L.DomEvent.stopPropagation(ev);
+            if (!drawEditExisting && idx === 0 && drawPoints.length >= 3) {
+              finishDrawing();
+              return;
+            }
+            const popupWrap = document.createElement("div");
+            popupWrap.className = "draw-vertex-popup";
+            const label = document.createElement("span");
+            label.textContent = `Đỉnh #${idx + 1}`;
+            const delBtn = document.createElement("button");
+            delBtn.type = "button";
+            delBtn.className = "draw-vertex-delete-btn";
+            delBtn.textContent = "Xóa đỉnh";
+            delBtn.addEventListener("click", (btnEv) => {
+              btnEv.stopPropagation();
+              deleteDrawVertex(idx);
+            });
+            popupWrap.append(label, delBtn);
+            marker.bindPopup(popupWrap, { closeButton: false, offset: [0, -6] }).openPopup();
+          });
+
+          marker.on("contextmenu", (ev) => {
+            L.DomEvent.stop(ev);
+            deleteDrawVertex(idx);
+          });
+        });
+
+        updateDrawUiStats();
+      }
+
+      function setMapDrawing(active, keepDraft = false) {
+        if (active && mapPickActive) setMapPicking(false);
+        drawModeActive = active;
+        document.body.classList.toggle("map-drawing", active);
+        document.body.classList.toggle(
+          "map-draw-editing",
+          active && drawEditExisting,
+        );
+        if (mapDrawBtnEl) mapDrawBtnEl.classList.toggle("is-active", active);
+        if (!active && !keepDraft) {
+          const wasEditingParcel = Boolean(drawnBaseMeta && currentParcelData);
+          clearDrawing();
+          if (wasEditingParcel) {
+            geoOutputEl.value = currentParcelData.polygon_geojson || "";
+            copyBtnEl.disabled = !currentParcelData.polygon_geojson;
+            const origWkt = geometryToWkt(currentParcelData.geometry_obj);
+            wktOutputEl.value = origWkt;
+            copyWktBtnEl.disabled = !origWkt;
+            document.getElementById("valDienTich").textContent =
+              currentParcelData.dien_tich != null
+                ? `${formatNumber(currentParcelData.dien_tich)} m²`
+                : "—";
+            document.getElementById("valDienTichM2").textContent =
+              currentParcelData.dien_tich_m2 != null
+                ? `${formatNumber(currentParcelData.dien_tich_m2)} m²`
+                : "—";
+            const loc = currentParcelMeta?.location;
+            if (loc && loc.y != null && loc.x != null) {
+              document.getElementById("valCenter").textContent =
+                `${Number(loc.y).toFixed(6)}, ${Number(loc.x).toFixed(6)}`;
+            }
+          }
+          statusBoxEl.className = "status";
+          statusBoxEl.textContent = "";
+        } else {
+          updateDrawUiStats();
+        }
+        if (active && isCompactViewport()) {
+          closeMobileModals();
+        }
+      }
+
+      function addDrawPoint(latlng) {
+        pushDrawHistory();
+        drawPoints.push([latlng.lat, latlng.lng]);
+        renderDrawPreview();
+        syncLiveOutputsDuringEdit();
+      }
+
+      function undoDrawPoint() {
+        if (!drawHistory.length) return;
+        drawPoints = drawHistory.pop();
+        renderDrawPreview();
+        syncLiveOutputsDuringEdit();
+      }
+
+      function clearDrawing() {
+        drawPoints = [];
+        drawHistory = [];
+        drawEditExisting = false;
+        drawnBaseMeta = null;
+        drawLayerGroup.clearLayers();
+        updateDrawUiStats();
+      }
+
+      function finishDrawing() {
+        if (drawPoints.length < 3) {
+          setStatus("warn", "Cần chấm tối thiểu 3 đỉnh để tạo Polygon.");
+          return;
+        }
+        const { geomObj, areaM2, center } = buildDrawnPolygonState(drawPoints);
+        const vertexCount = drawPoints.length;
+        const base = drawnBaseMeta;
+        const cleanLoaiDat = (base?.loai_dat || "")
+          .replace(/\s*\((?:đã vẽ lại|Tự vẽ)[^)]*\)$/i, "")
+          .trim();
+        const result = {
+          found: true,
+          parcel: {
+            xa_phuong: base?.xa_phuong || "Vẽ thủ công trên bản đồ",
+            ward_id: base?.ward_id || "—",
+            so_to: base?.so_to || "Vẽ tay",
+            so_thua: base?.so_thua || "Tùy chỉnh",
+            loai_dat: cleanLoaiDat
+              ? `${cleanLoaiDat} (đã vẽ lại ${vertexCount} đỉnh)`
+              : `Tự vẽ (${vertexCount} đỉnh)`,
+            dien_tich: areaM2,
+            dien_tich_m2: areaM2,
+            quy_hoach: base?.quy_hoach || "",
+            polygon_geojson: JSON.stringify(geomObj),
+            geometry_obj: geomObj,
+          },
+          meta: {
+            isDrawn: true,
+            location: center,
+          },
+        };
+        setMapDrawing(false, true);
+        clearDrawing();
+        setStatus(
+          "ok",
+          `Đã tạo Polygon (${vertexCount} đỉnh, ~${formatNumber(areaM2)} m²). Bạn có thể Copy GeoJSON hoặc Copy WKT.`,
+        );
+        renderParcel(result);
+      }
+
+      function startRedrawFromCurrentParcel() {
+        const geom = currentParcelData?.geometry_obj;
+        const outerRing =
+          geom?.type === "MultiPolygon"
+            ? geom.coordinates?.[0]?.[0]
+            : geom?.coordinates?.[0];
+        if (!Array.isArray(outerRing) || outerRing.length < 3) {
+          setStatus("warn", "Thửa hiện tại chưa có hình học hợp lệ để vẽ lại.");
+          return;
+        }
+        const rawPts = outerRing.map(([lng, lat]) => [lat, lng]);
+        const first = rawPts[0];
+        const last = rawPts[rawPts.length - 1];
+        if (rawPts.length > 3 && first[0] === last[0] && first[1] === last[1]) {
+          rawPts.pop();
+        }
+        drawnBaseMeta = {
+          xa_phuong: currentParcelData.xa_phuong,
+          ward_id: currentParcelData.ward_id,
+          so_to: currentParcelData.so_to,
+          so_thua: currentParcelData.so_thua,
+          loai_dat: currentParcelData.loai_dat,
+          quy_hoach: currentParcelData.quy_hoach,
+        };
+        drawHistory = [];
+        drawEditExisting = true;
+        drawPoints = rawPts;
+        renderDrawPreview();
+        setMapDrawing(true);
+        setStatus(
+          "warn",
+          "Đang sửa góc: kéo đỉnh tròn để dời, kéo chấm nhỏ ở giữa cạnh để chèn đỉnh, chạm đỉnh (hoặc chuột phải) để xóa, rồi bấm Xong.",
+        );
       }
 
       function updateCoordWardHint() {
@@ -1089,7 +1426,8 @@
           }
           const w = oldSpatialWardsByKey[coordWardSelectEl.value];
           if (!w) {
-            coordWardHintEl.textContent = "Chưa có dữ liệu tọa độ trước sáp nhập.";
+            coordWardHintEl.textContent =
+              "Chưa có dữ liệu tọa độ trước sáp nhập.";
             return;
           }
           coordWardHintEl.textContent = `Thuộc ${w.newName} • Sẵn sàng ${w.parcelCount.toLocaleString("vi-VN")} thửa cũ`;
@@ -1110,7 +1448,9 @@
       }
 
       function parseCoordValue(raw) {
-        const cleaned = String(raw || "").trim().replace(",", ".");
+        const cleaned = String(raw || "")
+          .trim()
+          .replace(",", ".");
         const num = Number(cleaned);
         return Number.isFinite(num) ? num : null;
       }
@@ -1168,7 +1508,9 @@
           return pointInPolygonRings(lng, lat, coords);
         }
         if (gtypeCode === 1 && Array.isArray(coords)) {
-          return coords.some((polyRings) => pointInPolygonRings(lng, lat, polyRings));
+          return coords.some((polyRings) =>
+            pointInPolygonRings(lng, lat, polyRings),
+          );
         }
         return false;
       }
@@ -1183,8 +1525,8 @@
       function computeGeometryCenter(geomObj) {
         const rings =
           geomObj?.type === "MultiPolygon"
-            ? (geomObj.coordinates?.[0] || [])
-            : (geomObj?.coordinates || []);
+            ? geomObj.coordinates?.[0] || []
+            : geomObj?.coordinates || [];
         const outer = rings[0];
         if (!Array.isArray(outer) || !outer.length) return null;
         let minx = Infinity;
@@ -1238,12 +1580,63 @@
         );
       }
 
+      function loadNewSheet(wardId, sheetName) {
+        return loadCacheScript(
+          `./new_sheets/${wardId}/${encodeURIComponent(sheetName)}.js`,
+          "__NEW_SHEET_CACHE",
+          `${wardId}/${sheetName}`,
+        );
+      }
+
       function loadOldSheet(oldKey, soTo) {
         return loadCacheScript(
           `./old_sheets/${oldKey}/${encodeURIComponent(soTo)}.js`,
           "__OLD_SHEET_CACHE",
           `${oldKey}/${soTo}`,
         );
+      }
+
+      function findPlotRecord(sheetMap, plotRaw) {
+        if (!sheetMap || typeof sheetMap !== "object") return null;
+        const targetPlot = String(plotRaw || "").trim();
+        const normalizedPlot = targetPlot.replace(/^0+/, "") || targetPlot;
+        if (Array.isArray(sheetMap[targetPlot])) {
+          return { plotKey: targetPlot, record: sheetMap[targetPlot] };
+        }
+        if (Array.isArray(sheetMap[normalizedPlot])) {
+          return { plotKey: normalizedPlot, record: sheetMap[normalizedPlot] };
+        }
+        return null;
+      }
+
+      async function lookupNewParcelByPlot(wardId, sheetName, plotRaw) {
+        const wardMeta = newWardsById[wardId];
+        if (!wardMeta) return { found: false };
+        const sheetMap = await loadNewSheet(wardId, sheetName);
+        const found = findPlotRecord(sheetMap, plotRaw);
+        if (!found) return { found: false };
+
+        const [loaiDat, dienTich, dienTichM2, gtypeCode, coords] = found.record;
+        const geomObj = decodeOldGeometry(gtypeCode, coords);
+        const center = computeGeometryCenter(geomObj);
+        return {
+          found: true,
+          parcel: {
+            xa_phuong: wardMeta.address,
+            ward_id: wardId,
+            so_to: sheetName.toUpperCase(),
+            so_thua: found.plotKey,
+            loai_dat: loaiDat || "",
+            dien_tich: dienTich,
+            dien_tich_m2: dienTichM2,
+            polygon_geojson: JSON.stringify(geomObj),
+            geometry_obj: geomObj,
+          },
+          meta: {
+            era: "new",
+            location: center,
+          },
+        };
       }
 
       function loadOldSpatialTile(oldKey, gx, gy) {
@@ -1254,7 +1647,16 @@
         );
       }
 
-      function buildOldParcelResponse(wardMeta, soTo, soThua, loaiDat, dienTich, qhTomTat, geomObj, center) {
+      function buildOldParcelResponse(
+        wardMeta,
+        soTo,
+        soThua,
+        loaiDat,
+        dienTich,
+        qhTomTat,
+        geomObj,
+        center,
+      ) {
         return {
           found: true,
           parcel: {
@@ -1313,7 +1715,12 @@
         const candidates = [];
         for (const item of items) {
           const bbox = item[5];
-          if (lng >= bbox[0] && lng <= bbox[2] && lat >= bbox[1] && lat <= bbox[3]) {
+          if (
+            lng >= bbox[0] &&
+            lng <= bbox[2] &&
+            lat >= bbox[1] &&
+            lat <= bbox[3]
+          ) {
             const areaApprox = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1]);
             candidates.push({ item, areaApprox });
           }
@@ -1322,7 +1729,16 @@
 
         const wardMeta = oldSpatialWardsByKey[oldKey];
         for (const { item } of candidates) {
-          const [soTo, soThua, loaiDat, dienTich, qhTomTat, bbox, gtypeCode, coords] = item;
+          const [
+            soTo,
+            soThua,
+            loaiDat,
+            dienTich,
+            qhTomTat,
+            bbox,
+            gtypeCode,
+            coords,
+          ] = item;
           if (pointInGeometry(lng, lat, gtypeCode, coords)) {
             const geomObj = decodeOldGeometry(gtypeCode, coords);
             const center = {
@@ -1408,11 +1824,17 @@
           return;
         }
         if (lng === null || lat === null) {
-          setStatus("warn", "Vui lòng nhập đầy đủ Kinh độ (Lng) và Vĩ độ (Lat) hợp lệ.");
+          setStatus(
+            "warn",
+            "Vui lòng nhập đầy đủ Kinh độ (Lng) và Vĩ độ (Lat) hợp lệ.",
+          );
           return;
         }
         if (lng < 100 || lng > 112 || lat < 8 || lat > 24) {
-          setStatus("warn", "Tọa độ có vẻ bị ngược hoặc ngoài khu vực Tây Ninh (Lng ~106.x, Lat ~10.x).");
+          setStatus(
+            "warn",
+            "Tọa độ có vẻ bị ngược hoặc ngoài khu vực Tây Ninh (Lng ~106.x, Lat ~10.x).",
+          );
           return;
         }
 
@@ -1421,7 +1843,10 @@
           searchEra === "old"
             ? oldSpatialWardsByKey[wardKey]?.oldName || wardKey
             : spatialWardsById[wardKey]?.address || wardKey;
-        setStatus("loading", `Đang dò thửa đất (${wardName}) tại (${lng.toFixed(6)}, ${lat.toFixed(6)})...`);
+        setStatus(
+          "loading",
+          `Đang dò thửa đất (${wardName}) tại (${lng.toFixed(6)}, ${lat.toFixed(6)})...`,
+        );
 
         try {
           const result =
@@ -1458,10 +1883,15 @@
               "warn",
               `Không tìm thấy thửa đất nào chứa tọa độ (${lng.toFixed(6)}, ${lat.toFixed(6)}) trong ${wardName}.`,
             );
-            if (isCompactViewport() && !document.body.classList.contains("mobile-search-open")) {
+            if (
+              isCompactViewport() &&
+              !document.body.classList.contains("mobile-search-open")
+            ) {
               openSearchModal();
             } else {
-              map.flyTo([lat, lng], Math.max(map.getZoom(), 17), { duration: 0.65 });
+              map.flyTo([lat, lng], Math.max(map.getZoom(), 17), {
+                duration: 0.65,
+              });
             }
           }
         } catch (err) {
@@ -1495,14 +1925,24 @@
           const sheetName = findOldSheet(wardKey, sheetRaw);
           if (!sheetName) {
             const wardName = oldWardsByKey[wardKey]?.oldName || wardKey;
-            setStatus("warn", `Không tìm thấy tờ "${sheetRaw}" trong ${wardName}.`);
+            setStatus(
+              "warn",
+              `Không tìm thấy tờ "${sheetRaw}" trong ${wardName}.`,
+            );
             return;
           }
 
           searchBtnEl.disabled = true;
-          setStatus("loading", `Đang nạp dữ liệu trước sáp nhập: Tờ ${sheetName}, thửa ${plotRaw}...`);
+          setStatus(
+            "loading",
+            `Đang nạp dữ liệu trước sáp nhập: Tờ ${sheetName}, thửa ${plotRaw}...`,
+          );
           try {
-            const data = await lookupOldParcelByPlot(wardKey, sheetName, plotRaw);
+            const data = await lookupOldParcelByPlot(
+              wardKey,
+              sheetName,
+              plotRaw,
+            );
             if (data.found) {
               data.meta = {
                 ...(data.meta || {}),
@@ -1514,10 +1954,16 @@
                   thua: plotRaw,
                 },
               };
-              setStatus("ok", `Tìm thấy thửa ${data.parcel.so_thua} (Tờ ${data.parcel.so_to} - ${oldWardsByKey[wardKey]?.oldName}).`);
+              setStatus(
+                "ok",
+                `Tìm thấy thửa ${data.parcel.so_thua} (Tờ ${data.parcel.so_to} - ${oldWardsByKey[wardKey]?.oldName}).`,
+              );
               renderParcel(data);
             } else {
-              setStatus("warn", `Không tìm thấy thửa ${plotRaw} trong tờ ${sheetName} (${oldWardsByKey[wardKey]?.oldName}).`);
+              setStatus(
+                "warn",
+                `Không tìm thấy thửa ${plotRaw} trong tờ ${sheetName} (${oldWardsByKey[wardKey]?.oldName}).`,
+              );
             }
           } catch (err) {
             setStatus("err", `Lỗi tra cứu trước sáp nhập: ${err.message}`);
@@ -1527,10 +1973,9 @@
           return;
         }
 
-        const sheet = findSheetInWard(wardKey, sheetRaw);
-        if (!sheet) {
-          const wardName =
-            wardSelectEl.options[wardSelectEl.selectedIndex]?.text || wardKey;
+        const sheetName = findSheetInWard(wardKey, sheetRaw);
+        if (!sheetName) {
+          const wardName = newWardsById[wardKey]?.address || wardKey;
           setStatus(
             "warn",
             `Không tìm thấy tờ "${sheetRaw}" trong ${wardName}.`,
@@ -1541,11 +1986,11 @@
         searchBtnEl.disabled = true;
         setStatus(
           "loading",
-          `Đang gọi API: ${sheet.nameString.toUpperCase()}, thửa ${plotRaw}...`,
+          `Đang nạp dữ liệu tĩnh: ${sheetName.toUpperCase()}, thửa ${plotRaw}...`,
         );
 
         try {
-          const data = await lookupParcelDirect(wardKey, sheet, plotRaw);
+          const data = await lookupNewParcelByPlot(wardKey, sheetName, plotRaw);
 
           if (data.found) {
             data.meta = {
@@ -1554,7 +1999,7 @@
                 era: "new",
                 mode: "plot",
                 ward: wardKey,
-                to: sheet.nameString,
+                to: sheetName,
                 thua: plotRaw,
               },
             };
@@ -1566,7 +2011,7 @@
           } else {
             setStatus(
               "warn",
-              `Không tìm thấy thông tin thửa ${plotRaw} của tờ ${sheet.nameString.toUpperCase()}.`,
+              `Không tìm thấy thông tin thửa ${plotRaw} của tờ ${sheetName.toUpperCase()}.`,
             );
           }
         } catch (err) {
@@ -1578,13 +2023,10 @@
 
       wardSelectEl.addEventListener("change", () => {
         updateWardHint();
-        let center = null;
-        if (searchEra === "old") {
-          center = oldWardsByKey[wardSelectEl.value]?.center || null;
-        } else {
-          const sheets = sheetsByWard[wardSelectEl.value] || [];
-          center = sheets.find((s) => Array.isArray(s.center))?.center || null;
-        }
+        const center =
+          searchEra === "old"
+            ? oldWardsByKey[wardSelectEl.value]?.center || null
+            : newWardsById[wardSelectEl.value]?.center || null;
         if (center) {
           if (prefersReducedMotion()) {
             map.setView(center, 14);
@@ -1613,13 +2055,16 @@
         if (currentShareState.era === "old") params.set("era", "old");
         if (currentShareState.mode === "coord") {
           params.set("mode", "coord");
-          if (currentShareState.ward) params.set("ward", currentShareState.ward);
+          if (currentShareState.ward)
+            params.set("ward", currentShareState.ward);
           params.set("lng", currentShareState.lng);
           params.set("lat", currentShareState.lat);
         } else {
-          if (currentShareState.ward) params.set("ward", currentShareState.ward);
+          if (currentShareState.ward)
+            params.set("ward", currentShareState.ward);
           if (currentShareState.to) params.set("to", currentShareState.to);
-          if (currentShareState.thua) params.set("thua", currentShareState.thua);
+          if (currentShareState.thua)
+            params.set("thua", currentShareState.thua);
         }
         const base = `${window.location.origin === "null" ? "" : window.location.origin}${window.location.pathname}`;
         return `${base}?${params.toString()}`;
@@ -1680,12 +2125,21 @@
         if (!shareUrl) return;
         await copyStringToClipboard(shareUrl);
         setStatus("ok", "Đã copy link chia sẻ thửa đất.");
-        flashButtonLabel(btnEl, textNode ? "✓ Đã copy link" : "✓", defaultLabel, textNode);
+        flashButtonLabel(
+          btnEl,
+          textNode ? "✓ Đã copy link" : "✓",
+          defaultLabel,
+          textNode,
+        );
       }
 
       shareLinkBtnEl.addEventListener("click", () => {
         const labelEl = shareLinkBtnEl.querySelector("span");
-        shareCurrentParcelLink(shareLinkBtnEl, labelEl, "Chia sẻ link thửa đất");
+        shareCurrentParcelLink(
+          shareLinkBtnEl,
+          labelEl,
+          "Chia sẻ link thửa đất",
+        );
       });
 
       const mobileShareDefaultHtml = mobileShareBtnEl.innerHTML;
@@ -1756,8 +2210,7 @@
           return;
         }
 
-        const data = window.PARCEL_CATALOG;
-        const wards = (data && Array.isArray(data.wards) ? data.wards : [])
+        const wards = Object.values(newWardsById)
           .slice()
           .sort((a, b) => a.address.localeCompare(b.address, "vi"));
 
@@ -1780,7 +2233,10 @@
         if (searchEra === "old") {
           const oldWards = Object.values(oldSpatialWardsByKey);
           populateGroupedOldSelect(coordWardSelectEl, oldWards);
-          if (oldWards.length && !oldSpatialWardsByKey[coordWardSelectEl.value]) {
+          if (
+            oldWards.length &&
+            !oldSpatialWardsByKey[coordWardSelectEl.value]
+          ) {
             coordWardSelectEl.value = oldWards[0].oldKey;
           }
           updateCoordWardHint();
@@ -1816,21 +2272,23 @@
       }
 
       function init() {
-        const data = window.PARCEL_CATALOG;
+        const data = window.NEW_PARCEL_MANIFEST;
         if (!data || !Array.isArray(data.wards)) {
-          catalogInfoEl.textContent = "Lỗi tải danh mục tĩnh.";
-          mobileTopSubEl.textContent = "Lỗi tải danh mục tĩnh";
-          setStatus("err", "Không tìm thấy dữ liệu trong catalog.js.");
+          catalogInfoEl.textContent = "Lỗi tải dữ liệu tĩnh.";
+          mobileTopSubEl.textContent = "Lỗi tải dữ liệu tĩnh";
+          setStatus(
+            "err",
+            "Không tìm thấy dữ liệu trong ./new_sheets/manifest.js.",
+          );
           return;
         }
 
-        sheetsByWard = data.sheetsByWard || {};
-        wardsById = Object.fromEntries(data.wards.map((w) => [w.wardId, w]));
+        newWardsById = Object.fromEntries(data.wards.map((w) => [w.wardId, w]));
 
         const oldCount = window.OLD_PARCEL_MANIFEST?.totalWards || 0;
         const summaryText = oldCount
-          ? `${data.totalWards} xã mới + ${oldCount} xã cũ trước sáp nhập`
-          : `${data.totalWards} xã/phường • ${data.totalSheets.toLocaleString("vi-VN")} tờ bản đồ`;
+          ? `Mỹ Lộc & Phước Lý (${data.totalSheets} tờ mới + ${oldCount} xã cũ)`
+          : `${data.totalWards} xã • ${data.totalSheets.toLocaleString("vi-VN")} tờ bản đồ`;
         catalogInfoEl.textContent = summaryText;
         mobileTopSubEl.textContent = `${summaryText} • Chạm để tra cứu`;
 
@@ -1839,7 +2297,9 @@
 
       function initSpatialManifest() {
         const manifest = window.SPATIAL_MANIFEST;
-        const wards = (manifest && Array.isArray(manifest.wards) ? manifest.wards : [])
+        const wards = (
+          manifest && Array.isArray(manifest.wards) ? manifest.wards : []
+        )
           .slice()
           .sort((a, b) => a.address.localeCompare(b.address, "vi"));
 
@@ -1849,18 +2309,28 @@
 
       function initOldManifests() {
         const oldSheets = window.OLD_PARCEL_MANIFEST;
-        const oldWards = oldSheets && Array.isArray(oldSheets.wards) ? oldSheets.wards : [];
+        const oldWards =
+          oldSheets && Array.isArray(oldSheets.wards) ? oldSheets.wards : [];
         oldWardsByKey = Object.fromEntries(oldWards.map((w) => [w.oldKey, w]));
 
         const oldSpatial = window.OLD_SPATIAL_MANIFEST;
-        const oldSpWards = oldSpatial && Array.isArray(oldSpatial.wards) ? oldSpatial.wards : [];
-        oldSpatialWardsByKey = Object.fromEntries(oldSpWards.map((w) => [w.oldKey, w]));
+        const oldSpWards =
+          oldSpatial && Array.isArray(oldSpatial.wards) ? oldSpatial.wards : [];
+        oldSpatialWardsByKey = Object.fromEntries(
+          oldSpWards.map((w) => [w.oldKey, w]),
+        );
       }
 
       eraNewBtnEl.addEventListener("click", () => switchEra("new"));
       eraOldBtnEl.addEventListener("click", () => switchEra("old"));
       tabPlotBtnEl.addEventListener("click", () => switchSearchTab("plot"));
       tabCoordBtnEl.addEventListener("click", () => switchSearchTab("coord"));
+      bannerUndoDrawBtnEl.addEventListener("click", undoDrawPoint);
+      bannerFinishDrawBtnEl.addEventListener("click", finishDrawing);
+      bannerCancelDrawBtnEl.addEventListener("click", () =>
+        setMapDrawing(false),
+      );
+      redrawParcelBtnEl.addEventListener("click", startRedrawFromCurrentParcel);
 
       coordWardSelectEl.addEventListener("change", () => {
         updateCoordWardHint();
@@ -1915,7 +2385,9 @@
             iconAnchor: [15, 15],
           }),
         })
-          .bindTooltip(`Vị trí hiện tại: ${lat.toFixed(6)}, ${lng.toFixed(6)}${accText}`)
+          .bindTooltip(
+            `Vị trí hiện tại: ${lat.toFixed(6)}, ${lng.toFixed(6)}${accText}`,
+          )
           .addTo(gpsLayerGroup);
       }
 
@@ -1956,7 +2428,11 @@
             lngInputEl.value = lng.toFixed(6);
             latInputEl.value = lat.toFixed(6);
 
-            const gpsMarker = showGpsLocationMarker(lat, lng, pos.coords.accuracy);
+            const gpsMarker = showGpsLocationMarker(
+              lat,
+              lng,
+              pos.coords.accuracy,
+            );
 
             if (fromMapControl) {
               if (prefersReducedMotion()) {
@@ -2034,6 +2510,10 @@
       });
 
       map.on("click", (e) => {
+        if (drawModeActive) {
+          if (!drawEditExisting) addDrawPoint(e.latlng);
+          return;
+        }
         if (!mapPickActive) return;
         setMapPicking(false);
         lngInputEl.value = e.latlng.lng.toFixed(6);
@@ -2060,6 +2540,10 @@
 
       document.addEventListener("keydown", (e) => {
         if (e.key !== "Escape") return;
+        if (drawModeActive) {
+          setMapDrawing(false);
+          return;
+        }
         if (mapPickActive) {
           setMapPicking(false);
           return;
@@ -2104,13 +2588,19 @@
 
         let ward = (params.get("ward") || "").trim();
         if (era === "old" && ward && !ward.startsWith("cu_")) {
-          const byId = Object.values(oldWardsByKey).find((w) => w.oldWardId === ward);
+          const byId = Object.values(oldWardsByKey).find(
+            (w) => w.oldWardId === ward,
+          );
           if (byId) ward = byId.oldKey;
         }
 
-        const mode = params.get("mode") === "coord" || (lng && lat) ? "coord" : "plot";
+        const mode =
+          params.get("mode") === "coord" || (lng && lat) ? "coord" : "plot";
         if (mode === "coord") {
-          if (ward && Array.from(coordWardSelectEl.options).some((o) => o.value === ward)) {
+          if (
+            ward &&
+            Array.from(coordWardSelectEl.options).some((o) => o.value === ward)
+          ) {
             coordWardSelectEl.value = ward;
             updateCoordWardHint();
           }
@@ -2121,7 +2611,10 @@
           return;
         }
 
-        if (ward && Array.from(wardSelectEl.options).some((o) => o.value === ward)) {
+        if (
+          ward &&
+          Array.from(wardSelectEl.options).some((o) => o.value === ward)
+        ) {
           wardSelectEl.value = ward;
           updateWardHint();
         }

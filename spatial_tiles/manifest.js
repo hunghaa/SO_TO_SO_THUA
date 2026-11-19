@@ -1,0 +1,1 @@
+window.SPATIAL_MANIFEST={"step":0.0025,"wards":[{"wardId":"28177","address":"Xã Mỹ Lộc, Tây Ninh","parcelCount":38304,"center":[10.595583,106.624106]},{"wardId":"28165","address":"Xã Phước Lý, Tây Ninh","parcelCount":29979,"center":[10.634633,106.594379]}]};

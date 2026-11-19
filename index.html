@@ -90,28 +90,112 @@
           </button>
         </div>
 
-        <div class="field">
-          <label for="wardSelect">Xã / Phường</label>
-          <select id="wardSelect"></select>
-          <span class="hint" id="wardHint"></span>
+        <div class="search-tabs" role="tablist" aria-label="Chế độ tra cứu">
+          <button
+            id="tabPlotBtn"
+            class="search-tab active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="plotPanel"
+          >
+            Theo Tờ / Thửa
+          </button>
+          <button
+            id="tabCoordBtn"
+            class="search-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="coordPanel"
+          >
+            Theo Lng / Lat
+          </button>
         </div>
 
-        <div class="field-row">
+        <div id="plotPanel" class="search-panel" role="tabpanel" aria-labelledby="tabPlotBtn">
           <div class="field">
-            <label for="sheetInput">Tờ bản đồ</label>
-            <input
-              id="sheetInput"
-              type="text"
-              placeholder="Vd: 71 hoặc dc71"
-            />
+            <label for="wardSelect">Xã / Phường</label>
+            <select id="wardSelect"></select>
+            <span class="hint" id="wardHint"></span>
           </div>
-          <div class="field">
-            <label for="plotInput">Số thửa</label>
-            <input id="plotInput" type="text" placeholder="Vd: 51" />
+
+          <div class="field-row">
+            <div class="field">
+              <label for="sheetInput">Tờ bản đồ</label>
+              <input
+                id="sheetInput"
+                type="text"
+                placeholder="Vd: 71 hoặc dc71"
+              />
+            </div>
+            <div class="field">
+              <label for="plotInput">Số thửa</label>
+              <input id="plotInput" type="text" placeholder="Vd: 51" />
+            </div>
           </div>
+
+          <button id="searchBtn" class="btn">Tra cứu &amp; Xem bản đồ</button>
         </div>
 
-        <button id="searchBtn" class="btn">Tra cứu &amp; Xem bản đồ</button>
+        <div id="coordPanel" class="search-panel" role="tabpanel" aria-labelledby="tabCoordBtn" hidden>
+          <div class="field">
+            <label for="coordWardSelect">Xã / Phường (đã có dữ liệu)</label>
+            <select id="coordWardSelect"></select>
+            <span class="hint" id="coordWardHint"></span>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="lngInput">Kinh độ (Lng)</label>
+              <input
+                id="lngInput"
+                type="text"
+                inputmode="decimal"
+                placeholder="Vd: 106.644274"
+              />
+            </div>
+            <div class="field">
+              <label for="latInput">Vĩ độ (Lat)</label>
+              <input
+                id="latInput"
+                type="text"
+                inputmode="decimal"
+                placeholder="Vd: 10.596703"
+              />
+            </div>
+          </div>
+
+          <div class="coord-actions">
+            <button id="coordSearchBtn" class="btn" type="button">Tra cứu tọa độ</button>
+            <div class="coord-sub-actions">
+              <button
+                id="currentLocationBtn"
+                class="btn btn-outline btn-with-icon"
+                type="button"
+                title="Lấy tọa độ GPS hiện tại"
+              >
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M12 2v3"></path>
+                  <path d="M12 19v3"></path>
+                  <path d="M2 12h3"></path>
+                  <path d="M19 12h3"></path>
+                  <circle cx="12" cy="12" r="7"></circle>
+                </svg>
+                <span>Vị trí hiện tại</span>
+              </button>
+              <button
+                id="pickOnMapBtn"
+                class="btn btn-outline"
+                type="button"
+                title="Chạm lên bản đồ để lấy Lng/Lat"
+              >
+                Chấm bản đồ
+              </button>
+            </div>
+          </div>
+        </div>
 
         <div id="statusBox" class="status"></div>
       </div>
@@ -202,12 +286,36 @@
               placeholder="Chưa có dữ liệu..."
             ></textarea>
           </div>
+
+          <div class="field">
+            <div class="geo-header">
+              <label for="wktOutput">Polygon WKT</label>
+              <button
+                id="copyWktBtn"
+                class="btn btn-outline btn-copy-inline"
+                type="button"
+                disabled
+              >
+                Copy WKT
+              </button>
+            </div>
+            <textarea
+              id="wktOutput"
+              class="geo-text"
+              readonly
+              placeholder="POLYGON ((...))"
+            ></textarea>
+          </div>
         </div>
       </div>
     </aside>
 
     <main class="map-wrap" id="mapWrap">
       <div id="map"></div>
+      <div id="mapPickBanner" class="map-pick-banner" role="status">
+        <span>Chạm vào vị trí thửa đất trên bản đồ</span>
+        <button id="cancelPickBtn" class="map-pick-cancel" type="button">Hủy</button>
+      </div>
       <button
         id="mapFullscreenBtn"
         class="map-fullscreen-btn"
@@ -250,6 +358,7 @@
       crossorigin=""
     ></script>
     <script src="./catalog.js"></script>
+    <script src="./spatial_tiles/manifest.js"></script>
     <script>
       const map = L.map("map", {
         maxZoom: 22,
@@ -300,16 +409,53 @@
         .addTo(map);
 
       const parcelLayerGroup = L.layerGroup().addTo(map);
+      const gpsLayerGroup = L.layerGroup().addTo(map);
+
+      let mapLocateBtnEl = null;
+      const LocateControl = L.Control.extend({
+        options: { position: "topleft" },
+        onAdd() {
+          const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
+          const btn = L.DomUtil.create("button", "leaflet-locate-btn", container);
+          btn.type = "button";
+          btn.title = "Lấy vị trí hiện tại";
+          btn.setAttribute("aria-label", "Lấy vị trí hiện tại");
+          btn.innerHTML =
+            '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3"></path><path d="M12 19v3"></path><path d="M2 12h3"></path><path d="M19 12h3"></path><circle cx="12" cy="12" r="7"></circle></svg>';
+          L.DomEvent.disableClickPropagation(container);
+          L.DomEvent.on(btn, "click", (ev) => {
+            L.DomEvent.stop(ev);
+            handleGetCurrentLocation(true);
+          });
+          mapLocateBtnEl = btn;
+          return container;
+        },
+      });
+      new LocateControl().addTo(map);
 
       const wardSelectEl = document.getElementById("wardSelect");
       const wardHintEl = document.getElementById("wardHint");
       const sheetInputEl = document.getElementById("sheetInput");
       const plotInputEl = document.getElementById("plotInput");
       const searchBtnEl = document.getElementById("searchBtn");
+      const tabPlotBtnEl = document.getElementById("tabPlotBtn");
+      const tabCoordBtnEl = document.getElementById("tabCoordBtn");
+      const plotPanelEl = document.getElementById("plotPanel");
+      const coordPanelEl = document.getElementById("coordPanel");
+      const coordWardSelectEl = document.getElementById("coordWardSelect");
+      const coordWardHintEl = document.getElementById("coordWardHint");
+      const lngInputEl = document.getElementById("lngInput");
+      const latInputEl = document.getElementById("latInput");
+      const coordSearchBtnEl = document.getElementById("coordSearchBtn");
+      const currentLocationBtnEl = document.getElementById("currentLocationBtn");
+      const pickOnMapBtnEl = document.getElementById("pickOnMapBtn");
+      const cancelPickBtnEl = document.getElementById("cancelPickBtn");
       const statusBoxEl = document.getElementById("statusBox");
       const catalogInfoEl = document.getElementById("catalogInfo");
       const geoOutputEl = document.getElementById("geoOutput");
       const copyBtnEl = document.getElementById("copyBtn");
+      const wktOutputEl = document.getElementById("wktOutput");
+      const copyWktBtnEl = document.getElementById("copyWktBtn");
       const searchCardEl = document.getElementById("searchCard");
       const infoCardEl = document.getElementById("infoCard");
       const mapWrapEl = document.getElementById("mapWrap");
@@ -644,6 +790,39 @@
         }
       }
 
+      function formatWktRing(ring) {
+        if (!Array.isArray(ring) || !ring.length) return "";
+        const pts = ring.filter((pt) => Array.isArray(pt) && pt.length >= 2);
+        if (!pts.length) return "";
+        const first = pts[0];
+        const last = pts[pts.length - 1];
+        const closed =
+          first[0] === last[0] && first[1] === last[1] ? pts : [...pts, first];
+        return `(${closed.map((pt) => `${pt[0]} ${pt[1]}`).join(", ")})`;
+      }
+
+      function geometryToWkt(geom) {
+        if (!geom || typeof geom !== "object" || !Array.isArray(geom.coordinates)) {
+          return "";
+        }
+        if (geom.type === "Polygon") {
+          const rings = geom.coordinates.map(formatWktRing).filter(Boolean);
+          return rings.length ? `POLYGON (${rings.join(", ")})` : "";
+        }
+        if (geom.type === "MultiPolygon") {
+          const polys = geom.coordinates
+            .map((poly) => {
+              const rings = Array.isArray(poly)
+                ? poly.map(formatWktRing).filter(Boolean)
+                : [];
+              return rings.length ? `(${rings.join(", ")})` : "";
+            })
+            .filter(Boolean);
+          return polys.length ? `MULTIPOLYGON (${polys.join(", ")})` : "";
+        }
+        return "";
+      }
+
       function renderParcel(data) {
         const p = data.parcel;
         const meta = data.meta || {};
@@ -673,6 +852,10 @@
 
         geoOutputEl.value = p.polygon_geojson || "";
         copyBtnEl.disabled = !p.polygon_geojson;
+
+        const wktText = geometryToWkt(p.geometry_obj);
+        wktOutputEl.value = wktText;
+        copyWktBtnEl.disabled = !wktText;
 
         document.body.classList.add("has-parcel-result");
         const titleText = `Tờ ${p.so_to} - Thửa ${p.so_thua}`;
@@ -761,6 +944,239 @@
         }
       }
 
+      const spatialTilePromises = new Map();
+      let spatialWardsById = {};
+      let mapPickActive = false;
+
+      function switchSearchTab(mode) {
+        const isCoord = mode === "coord";
+        tabPlotBtnEl.classList.toggle("active", !isCoord);
+        tabCoordBtnEl.classList.toggle("active", isCoord);
+        tabPlotBtnEl.setAttribute("aria-selected", String(!isCoord));
+        tabCoordBtnEl.setAttribute("aria-selected", String(isCoord));
+        plotPanelEl.hidden = isCoord;
+        coordPanelEl.hidden = !isCoord;
+        if (!isCoord) setMapPicking(false);
+      }
+
+      function setMapPicking(active) {
+        mapPickActive = active;
+        document.body.classList.toggle("map-picking", active);
+        pickOnMapBtnEl.classList.toggle("btn-pick-active", active);
+        if (active && isCompactViewport()) {
+          closeMobileModals();
+        }
+      }
+
+      function updateCoordWardHint() {
+        if (!window.SPATIAL_MANIFEST) {
+          coordWardHintEl.textContent =
+            "Chưa tải được ./spatial_tiles/manifest.js (nếu đang chạy web_app.py, hãy khởi động lại server).";
+          return;
+        }
+        const w = spatialWardsById[coordWardSelectEl.value];
+        if (!w) {
+          coordWardHintEl.textContent = "Chưa có dữ liệu tọa độ tĩnh.";
+          return;
+        }
+        coordWardHintEl.textContent = `Đã sẵn sàng ${w.parcelCount.toLocaleString("vi-VN")} thửa đất`;
+      }
+
+      function parseCoordValue(raw) {
+        const cleaned = String(raw || "").trim().replace(",", ".");
+        const num = Number(cleaned);
+        return Number.isFinite(num) ? num : null;
+      }
+
+      function trySplitCombinedCoords(rawText) {
+        const parts = String(rawText || "")
+          .trim()
+          .split(/[\s,;]+/)
+          .filter(Boolean);
+        if (parts.length !== 2) return false;
+        const a = Number(parts[0]);
+        const b = Number(parts[1]);
+        if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+        // Tây Ninh: Lat ~10..12, Lng ~105..107
+        if (a >= 8 && a <= 24 && b >= 100 && b <= 112) {
+          latInputEl.value = String(a);
+          lngInputEl.value = String(b);
+          return true;
+        }
+        if (b >= 8 && b <= 24 && a >= 100 && a <= 112) {
+          lngInputEl.value = String(a);
+          latInputEl.value = String(b);
+          return true;
+        }
+        return false;
+      }
+
+      function pointInRing(lng, lat, ring) {
+        let inside = false;
+        for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+          const xi = ring[i][0];
+          const yi = ring[i][1];
+          const xj = ring[j][0];
+          const yj = ring[j][1];
+          const intersect =
+            yi > lat !== yj > lat &&
+            lng < ((xj - xi) * (lat - yi)) / (yj - yi || 1e-15) + xi;
+          if (intersect) inside = !inside;
+        }
+        return inside;
+      }
+
+      function pointInPolygonRings(lng, lat, rings) {
+        if (!rings || !rings.length || !pointInRing(lng, lat, rings[0])) {
+          return false;
+        }
+        for (let k = 1; k < rings.length; k++) {
+          if (pointInRing(lng, lat, rings[k])) return false;
+        }
+        return true;
+      }
+
+      function loadSpatialTile(wardId, gx, gy) {
+        const cacheKey = `${wardId}/${gx}_${gy}`;
+        const cache = (window.__SPATIAL_CACHE = window.__SPATIAL_CACHE || {});
+        if (Object.prototype.hasOwnProperty.call(cache, cacheKey)) {
+          return Promise.resolve(cache[cacheKey]);
+        }
+        if (spatialTilePromises.has(cacheKey)) {
+          return spatialTilePromises.get(cacheKey);
+        }
+
+        const promise = new Promise((resolve) => {
+          const script = document.createElement("script");
+          script.src = `./spatial_tiles/${wardId}/${gx}_${gy}.js`;
+          script.async = true;
+          script.onload = () => {
+            script.remove();
+            resolve(cache[cacheKey] || null);
+          };
+          script.onerror = () => {
+            script.remove();
+            cache[cacheKey] = null;
+            resolve(null);
+          };
+          document.head.appendChild(script);
+        });
+
+        spatialTilePromises.set(cacheKey, promise);
+        return promise;
+      }
+
+      async function lookupParcelByCoord(wardId, lng, lat) {
+        const manifest = window.SPATIAL_MANIFEST;
+        const step = manifest?.step || 0.0025;
+        const gx = Math.floor(lng / step);
+        const gy = Math.floor(lat / step);
+        const items = await loadSpatialTile(wardId, gx, gy);
+        if (!Array.isArray(items) || !items.length) return null;
+
+        // Lọc nhanh theo bbox rồi kiểm tra Point-in-Polygon (ưu tiên thửa nhỏ nhất nếu trùng biên)
+        const candidates = [];
+        for (const item of items) {
+          const bbox = item[4];
+          if (
+            lng >= bbox[0] &&
+            lng <= bbox[2] &&
+            lat >= bbox[1] &&
+            lat <= bbox[3]
+          ) {
+            const areaApprox = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1]);
+            candidates.push({ item, areaApprox });
+          }
+        }
+        candidates.sort((a, b) => a.areaApprox - b.areaApprox);
+
+        for (const { item } of candidates) {
+          const rings = item[5];
+          if (pointInPolygonRings(lng, lat, rings)) {
+            const [soTo, soThua, loaiDat, dienTich, bbox] = item;
+            const wardMeta = spatialWardsById[wardId];
+            const geomObj = { type: "Polygon", coordinates: rings };
+            const centerLat = (bbox[1] + bbox[3]) * 0.5;
+            const centerLng = (bbox[0] + bbox[2]) * 0.5;
+            return {
+              found: true,
+              parcel: {
+                xa_phuong: wardMeta?.address || "",
+                ward_id: wardId,
+                so_to: soTo,
+                so_thua: soThua,
+                loai_dat: loaiDat,
+                dien_tich: dienTich,
+                dien_tich_m2: null,
+                polygon_geojson: JSON.stringify(geomObj),
+                geometry_obj: geomObj,
+              },
+              meta: {
+                location: { x: centerLng, y: centerLat },
+              },
+            };
+          }
+        }
+        return null;
+      }
+
+      async function handleCoordSearch() {
+        const wardId = coordWardSelectEl.value;
+        const lng = parseCoordValue(lngInputEl.value);
+        const lat = parseCoordValue(latInputEl.value);
+
+        if (!wardId) {
+          setStatus("warn", "Chưa có dữ liệu xã để tra cứu tọa độ.");
+          return;
+        }
+        if (lng === null || lat === null) {
+          setStatus("warn", "Vui lòng nhập đầy đủ Kinh độ (Lng) và Vĩ độ (Lat) hợp lệ.");
+          return;
+        }
+        if (lng < 100 || lng > 112 || lat < 8 || lat > 24) {
+          setStatus("warn", "Tọa độ có vẻ bị ngược hoặc ngoài khu vực Tây Ninh (Lng ~106.x, Lat ~10.x).");
+          return;
+        }
+
+        coordSearchBtnEl.disabled = true;
+        const wardName = spatialWardsById[wardId]?.address || wardId;
+        setStatus("loading", `Đang dò thửa đất tại (${lng.toFixed(6)}, ${lat.toFixed(6)})...`);
+
+        try {
+          const result = await lookupParcelByCoord(wardId, lng, lat);
+          if (result && result.found) {
+            setStatus(
+              "ok",
+              `Tìm thấy thửa ${result.parcel.so_thua} (tờ ${result.parcel.so_to}) tại (${lng.toFixed(6)}, ${lat.toFixed(6)}).`,
+            );
+            renderParcel(result);
+            L.circleMarker([lat, lng], {
+              radius: 5,
+              color: "#dc2626",
+              weight: 2,
+              fillColor: "#ffffff",
+              fillOpacity: 1,
+            })
+              .bindTooltip(`Điểm tra cứu: ${lat.toFixed(6)}, ${lng.toFixed(6)}`)
+              .addTo(parcelLayerGroup);
+          } else {
+            setStatus(
+              "warn",
+              `Không tìm thấy thửa đất nào chứa tọa độ (${lng.toFixed(6)}, ${lat.toFixed(6)}) trong ${wardName}.`,
+            );
+            if (isCompactViewport() && !document.body.classList.contains("mobile-search-open")) {
+              openSearchModal();
+            } else {
+              map.flyTo([lat, lng], Math.max(map.getZoom(), 17), { duration: 0.65 });
+            }
+          }
+        } catch (err) {
+          setStatus("err", `Lỗi tra cứu tọa độ: ${err.message}`);
+        } finally {
+          coordSearchBtnEl.disabled = false;
+        }
+      }
+
       async function handleSearch() {
         const wardId = wardSelectEl.value;
         const sheetRaw = sheetInputEl.value.trim();
@@ -844,22 +1260,42 @@
         if (e.key === "Enter") handleSearch();
       });
 
-      let copyResetTimer = null;
-      copyBtnEl.addEventListener("click", async () => {
-        if (!geoOutputEl.value) return;
+      const copyTimers = new WeakMap();
+      async function copyTextWithFeedback(textEl, btnEl, defaultLabel, okMsg) {
+        if (!textEl.value) return;
         try {
-          await navigator.clipboard.writeText(geoOutputEl.value);
+          await navigator.clipboard.writeText(textEl.value);
         } catch {
-          geoOutputEl.select();
+          textEl.select();
           document.execCommand("copy");
         }
-        setStatus("ok", "Đã copy Polygon GeoJSON.");
-        copyBtnEl.textContent = "✓ Đã copy GeoJSON";
-        clearTimeout(copyResetTimer);
-        copyResetTimer = setTimeout(() => {
-          copyBtnEl.textContent = "Copy GeoJSON";
-        }, 1600);
-      });
+        setStatus("ok", okMsg);
+        btnEl.textContent = `✓ Đã copy`;
+        clearTimeout(copyTimers.get(btnEl));
+        copyTimers.set(
+          btnEl,
+          setTimeout(() => {
+            btnEl.textContent = defaultLabel;
+          }, 1600),
+        );
+      }
+
+      copyBtnEl.addEventListener("click", () =>
+        copyTextWithFeedback(
+          geoOutputEl,
+          copyBtnEl,
+          "Copy GeoJSON",
+          "Đã copy Polygon GeoJSON.",
+        ),
+      );
+      copyWktBtnEl.addEventListener("click", () =>
+        copyTextWithFeedback(
+          wktOutputEl,
+          copyWktBtnEl,
+          "Copy WKT",
+          "Đã copy Polygon WKT.",
+        ),
+      );
 
       function init() {
         const data = window.PARCEL_CATALOG;
@@ -897,6 +1333,193 @@
         updateWardHint();
       }
 
+      function initSpatialManifest() {
+        const manifest = window.SPATIAL_MANIFEST;
+        const wards = (manifest && Array.isArray(manifest.wards) ? manifest.wards : [])
+          .slice()
+          .sort((a, b) => a.address.localeCompare(b.address, "vi"));
+
+        spatialWardsById = Object.fromEntries(wards.map((w) => [w.wardId, w]));
+        coordWardSelectEl.innerHTML = "";
+        wards.forEach((w) => {
+          const opt = document.createElement("option");
+          opt.value = w.wardId;
+          opt.textContent = `${w.address} (${w.wardId})`;
+          coordWardSelectEl.appendChild(opt);
+        });
+        if (wards.some((w) => w.wardId === "28177")) {
+          coordWardSelectEl.value = "28177";
+        }
+        updateCoordWardHint();
+      }
+
+      tabPlotBtnEl.addEventListener("click", () => switchSearchTab("plot"));
+      tabCoordBtnEl.addEventListener("click", () => switchSearchTab("coord"));
+
+      coordWardSelectEl.addEventListener("change", () => {
+        updateCoordWardHint();
+        const w = spatialWardsById[coordWardSelectEl.value];
+        if (w && Array.isArray(w.center)) {
+          if (prefersReducedMotion()) {
+            map.setView(w.center, 14);
+          } else {
+            map.flyTo(w.center, 14, { duration: 0.85, easeLinearity: 0.25 });
+          }
+        }
+      });
+
+      coordSearchBtnEl.addEventListener("click", handleCoordSearch);
+      [lngInputEl, latInputEl].forEach((inputEl) => {
+        inputEl.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") handleCoordSearch();
+        });
+        inputEl.addEventListener("paste", (e) => {
+          const text = e.clipboardData?.getData("text");
+          if (text && trySplitCombinedCoords(text)) {
+            e.preventDefault();
+          }
+        });
+      });
+
+      function showGpsLocationMarker(lat, lng, accuracy) {
+        gpsLayerGroup.clearLayers();
+        if (Number.isFinite(accuracy) && accuracy > 0) {
+          L.circle([lat, lng], {
+            radius: Math.min(accuracy, 500),
+            color: "#2563eb",
+            weight: 1,
+            fillColor: "#3b82f6",
+            fillOpacity: 0.14,
+            interactive: false,
+          }).addTo(gpsLayerGroup);
+        }
+        const accText =
+          Number.isFinite(accuracy) && accuracy > 0
+            ? ` (±${Math.round(accuracy)}m)`
+            : "";
+        return L.marker([lat, lng], {
+          zIndexOffset: 500,
+          icon: L.divIcon({
+            className: "gps-marker-icon",
+            html: '<span class="gps-marker-ring"></span><span class="gps-marker-dot"></span>',
+            iconSize: [30, 30],
+            iconAnchor: [15, 15],
+          }),
+        })
+          .bindTooltip(`Vị trí hiện tại: ${lat.toFixed(6)}, ${lng.toFixed(6)}${accText}`)
+          .addTo(gpsLayerGroup);
+      }
+
+      function handleGetCurrentLocation(fromMapControl = false) {
+        const notifyError = (type, msg) => {
+          setStatus(type, msg);
+          if (fromMapControl && isCompactViewport()) {
+            switchSearchTab("coord");
+            openSearchModal();
+          }
+        };
+
+        if (window.isSecureContext === false) {
+          notifyError(
+            "warn",
+            "Trình duyệt yêu cầu HTTPS hoặc localhost để lấy tọa độ GPS.",
+          );
+          return;
+        }
+        if (!navigator.geolocation) {
+          notifyError("err", "Trình duyệt không hỗ trợ lấy vị trí GPS.");
+          return;
+        }
+
+        currentLocationBtnEl.disabled = true;
+        if (mapLocateBtnEl) mapLocateBtnEl.classList.add("is-loading");
+        setStatus("loading", "Đang lấy tọa độ GPS hiện tại...");
+
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            currentLocationBtnEl.disabled = false;
+            if (mapLocateBtnEl) {
+              mapLocateBtnEl.classList.remove("is-loading");
+              mapLocateBtnEl.classList.add("is-active");
+            }
+            const lng = pos.coords.longitude;
+            const lat = pos.coords.latitude;
+            lngInputEl.value = lng.toFixed(6);
+            latInputEl.value = lat.toFixed(6);
+
+            const gpsMarker = showGpsLocationMarker(lat, lng, pos.coords.accuracy);
+
+            if (fromMapControl) {
+              if (prefersReducedMotion()) {
+                map.setView([lat, lng], Math.max(map.getZoom(), 17));
+              } else {
+                map.flyTo([lat, lng], Math.max(map.getZoom(), 17), {
+                  duration: 0.85,
+                  easeLinearity: 0.25,
+                });
+              }
+              gpsMarker.openTooltip();
+              const wardId = coordWardSelectEl.value;
+              if (wardId && lng >= 100 && lng <= 112 && lat >= 8 && lat <= 24) {
+                const res = await lookupParcelByCoord(wardId, lng, lat);
+                if (res && res.found) {
+                  setStatus(
+                    "ok",
+                    `Tìm thấy thửa ${res.parcel.so_thua} (tờ ${res.parcel.so_to}) tại vị trí hiện tại.`,
+                  );
+                  renderParcel(res);
+                }
+              }
+              return;
+            }
+
+            if (lng < 100 || lng > 112 || lat < 8 || lat > 24) {
+              setStatus(
+                "warn",
+                `Đã ghim vị trí hiện tại (${lat.toFixed(6)}, ${lng.toFixed(6)}) — tọa độ nằm ngoài Tây Ninh.`,
+              );
+              map.flyTo([lat, lng], 16, { duration: 0.8 });
+              return;
+            }
+
+            handleCoordSearch();
+          },
+          (err) => {
+            currentLocationBtnEl.disabled = false;
+            if (mapLocateBtnEl) mapLocateBtnEl.classList.remove("is-loading");
+            if (err.code === 1) {
+              notifyError("warn", "Bạn đã từ chối quyền truy cập vị trí GPS.");
+            } else if (err.code === 2) {
+              notifyError("err", "Không xác định được vị trí GPS hiện tại.");
+            } else if (err.code === 3) {
+              notifyError("warn", "Quá thời gian chờ lấy vị trí GPS.");
+            } else {
+              notifyError("err", `Lỗi lấy vị trí GPS: ${err.message}`);
+            }
+          },
+          { enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 },
+        );
+      }
+
+      currentLocationBtnEl.addEventListener("click", () =>
+        handleGetCurrentLocation(false),
+      );
+      pickOnMapBtnEl.addEventListener("click", () => {
+        setMapPicking(!mapPickActive);
+      });
+      cancelPickBtnEl.addEventListener("click", () => {
+        setMapPicking(false);
+      });
+
+      map.on("click", (e) => {
+        if (!mapPickActive) return;
+        setMapPicking(false);
+        lngInputEl.value = e.latlng.lng.toFixed(6);
+        latInputEl.value = e.latlng.lat.toFixed(6);
+        switchSearchTab("coord");
+        handleCoordSearch();
+      });
+
       mobileOpenSearchBtnEl.addEventListener("click", openSearchModal);
       mobileReSearchBtnEl.addEventListener("click", openSearchModal);
       mobileOpenInfoBtnEl.addEventListener("click", openInfoModal);
@@ -915,6 +1538,10 @@
 
       document.addEventListener("keydown", (e) => {
         if (e.key !== "Escape") return;
+        if (mapPickActive) {
+          setMapPicking(false);
+          return;
+        }
         if (
           document.body.classList.contains("mobile-search-open") ||
           document.body.classList.contains("mobile-info-open")
@@ -943,6 +1570,7 @@
       }
 
       init();
+      initSpatialManifest();
     </script>
   </body>
 </html>

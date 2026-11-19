@@ -253,6 +253,19 @@
         </p>
 
         <div id="infoContent" class="info-content" hidden>
+          <button
+            id="shareLinkBtn"
+            class="btn btn-outline btn-with-icon share-link-btn"
+            type="button"
+            disabled
+          >
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+            <span>Chia sẻ link thửa đất</span>
+          </button>
+
           <div class="info-grid">
             <div class="info-box full">
               <div class="info-label">Xã / Phường</div>
@@ -361,6 +374,18 @@
         <span id="mobileResultMeta">—</span>
       </button>
       <div class="mobile-result-actions">
+        <button
+          id="mobileShareBtn"
+          class="btn btn-outline mobile-action-btn mobile-share-btn"
+          type="button"
+          title="Chia sẻ link thửa đất"
+          aria-label="Chia sẻ link thửa đất"
+        >
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+        </button>
         <button
           id="mobileDetailBtn"
           class="btn btn-outline mobile-action-btn"
@@ -510,6 +535,8 @@
       const mobileResultMetaEl = document.getElementById("mobileResultMeta");
       const mobileOpenInfoBtnEl = document.getElementById("mobileOpenInfoBtn");
       const mobileDetailBtnEl = document.getElementById("mobileDetailBtn");
+      const mobileShareBtnEl = document.getElementById("mobileShareBtn");
+      const shareLinkBtnEl = document.getElementById("shareLinkBtn");
       const mobileReSearchBtnEl = document.getElementById("mobileReSearchBtn");
 
       function refreshMapSize() {
@@ -928,6 +955,12 @@
         const wktText = geometryToWkt(p.geometry_obj);
         wktOutputEl.value = wktText;
         copyWktBtnEl.disabled = !wktText;
+
+        currentShareState = meta.share || null;
+        shareLinkBtnEl.disabled = !currentShareState;
+        if (currentShareState) {
+          syncBrowserShareUrl();
+        }
 
         document.body.classList.add("has-parcel-result");
         const titleText = `Tờ ${p.so_to} - Thửa ${p.so_thua}`;
@@ -1396,6 +1429,16 @@
               ? await lookupOldParcelByCoord(wardKey, lng, lat)
               : await lookupParcelByCoord(wardKey, lng, lat);
           if (result && result.found) {
+            result.meta = {
+              ...(result.meta || {}),
+              share: {
+                era: searchEra,
+                mode: "coord",
+                ward: wardKey,
+                lng: lng.toFixed(6),
+                lat: lat.toFixed(6),
+              },
+            };
             setStatus(
               "ok",
               `Tìm thấy thửa ${result.parcel.so_thua} (tờ ${result.parcel.so_to}) tại (${lng.toFixed(6)}, ${lat.toFixed(6)}).`,
@@ -1461,6 +1504,16 @@
           try {
             const data = await lookupOldParcelByPlot(wardKey, sheetName, plotRaw);
             if (data.found) {
+              data.meta = {
+                ...(data.meta || {}),
+                share: {
+                  era: "old",
+                  mode: "plot",
+                  ward: wardKey,
+                  to: sheetName,
+                  thua: plotRaw,
+                },
+              };
               setStatus("ok", `Tìm thấy thửa ${data.parcel.so_thua} (Tờ ${data.parcel.so_to} - ${oldWardsByKey[wardKey]?.oldName}).`);
               renderParcel(data);
             } else {
@@ -1495,6 +1548,16 @@
           const data = await lookupParcelDirect(wardKey, sheet, plotRaw);
 
           if (data.found) {
+            data.meta = {
+              ...(data.meta || {}),
+              share: {
+                era: "new",
+                mode: "plot",
+                ward: wardKey,
+                to: sheet.nameString,
+                thua: plotRaw,
+              },
+            };
             setStatus(
               "ok",
               `Tìm thấy thửa ${data.parcel.so_thua} (${data.parcel.so_to}).`,
@@ -1542,25 +1605,105 @@
         if (e.key === "Enter") handleSearch();
       });
 
-      const copyTimers = new WeakMap();
-      async function copyTextWithFeedback(textEl, btnEl, defaultLabel, okMsg) {
-        if (!textEl.value) return;
-        try {
-          await navigator.clipboard.writeText(textEl.value);
-        } catch {
-          textEl.select();
-          document.execCommand("copy");
+      let currentShareState = null;
+
+      function buildShareUrl() {
+        if (!currentShareState) return "";
+        const params = new URLSearchParams();
+        if (currentShareState.era === "old") params.set("era", "old");
+        if (currentShareState.mode === "coord") {
+          params.set("mode", "coord");
+          if (currentShareState.ward) params.set("ward", currentShareState.ward);
+          params.set("lng", currentShareState.lng);
+          params.set("lat", currentShareState.lat);
+        } else {
+          if (currentShareState.ward) params.set("ward", currentShareState.ward);
+          if (currentShareState.to) params.set("to", currentShareState.to);
+          if (currentShareState.thua) params.set("thua", currentShareState.thua);
         }
-        setStatus("ok", okMsg);
-        btnEl.textContent = `✓ Đã copy`;
+        const base = `${window.location.origin === "null" ? "" : window.location.origin}${window.location.pathname}`;
+        return `${base}?${params.toString()}`;
+      }
+
+      function syncBrowserShareUrl() {
+        const shareUrl = buildShareUrl();
+        if (!shareUrl || window.location.protocol === "file:") return;
+        try {
+          window.history.replaceState(null, "", shareUrl);
+        } catch {}
+      }
+
+      async function copyStringToClipboard(text, selectEl = null) {
+        if (!text) return;
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          if (selectEl) {
+            selectEl.select();
+            document.execCommand("copy");
+          } else {
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            ta.setAttribute("readonly", "");
+            ta.style.position = "fixed";
+            ta.style.opacity = "0";
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            ta.remove();
+          }
+        }
+      }
+
+      const copyTimers = new WeakMap();
+      function flashButtonLabel(btnEl, okText, defaultText, targetNode = null) {
+        const node = targetNode || btnEl;
+        node.textContent = okText;
         clearTimeout(copyTimers.get(btnEl));
         copyTimers.set(
           btnEl,
           setTimeout(() => {
-            btnEl.textContent = defaultLabel;
+            node.textContent = defaultText;
           }, 1600),
         );
       }
+
+      async function copyTextWithFeedback(textEl, btnEl, defaultLabel, okMsg) {
+        if (!textEl.value) return;
+        await copyStringToClipboard(textEl.value, textEl);
+        setStatus("ok", okMsg);
+        flashButtonLabel(btnEl, "✓ Đã copy", defaultLabel);
+      }
+
+      async function shareCurrentParcelLink(btnEl, textNode, defaultLabel) {
+        const shareUrl = buildShareUrl();
+        if (!shareUrl) return;
+        await copyStringToClipboard(shareUrl);
+        setStatus("ok", "Đã copy link chia sẻ thửa đất.");
+        flashButtonLabel(btnEl, textNode ? "✓ Đã copy link" : "✓", defaultLabel, textNode);
+      }
+
+      shareLinkBtnEl.addEventListener("click", () => {
+        const labelEl = shareLinkBtnEl.querySelector("span");
+        shareCurrentParcelLink(shareLinkBtnEl, labelEl, "Chia sẻ link thửa đất");
+      });
+
+      const mobileShareDefaultHtml = mobileShareBtnEl.innerHTML;
+      mobileShareBtnEl.addEventListener("click", () => {
+        const shareUrl = buildShareUrl();
+        if (!shareUrl) return;
+        copyStringToClipboard(shareUrl).then(() => {
+          setStatus("ok", "Đã copy link chia sẻ thửa đất.");
+          mobileShareBtnEl.textContent = "✓";
+          clearTimeout(copyTimers.get(mobileShareBtnEl));
+          copyTimers.set(
+            mobileShareBtnEl,
+            setTimeout(() => {
+              mobileShareBtnEl.innerHTML = mobileShareDefaultHtml;
+            }, 1600),
+          );
+        });
+      });
 
       copyBtnEl.addEventListener("click", () =>
         copyTextWithFeedback(
@@ -1832,6 +1975,16 @@
                     ? await lookupOldParcelByCoord(wardId, lng, lat)
                     : await lookupParcelByCoord(wardId, lng, lat);
                 if (res && res.found) {
+                  res.meta = {
+                    ...(res.meta || {}),
+                    share: {
+                      era: searchEra,
+                      mode: "coord",
+                      ward: wardId,
+                      lng: lng.toFixed(6),
+                      lat: lat.toFixed(6),
+                    },
+                  };
                   setStatus(
                     "ok",
                     `Tìm thấy thửa ${res.parcel.so_thua} (tờ ${res.parcel.so_to}) tại vị trí hiện tại.`,
@@ -1938,9 +2091,50 @@
         new ResizeObserver(refreshMapSize).observe(mapWrapEl);
       }
 
+      function restoreFromUrlParams() {
+        const params = new URLSearchParams(window.location.search);
+        const to = (params.get("to") || "").trim();
+        const thua = (params.get("thua") || "").trim();
+        const lng = (params.get("lng") || "").trim();
+        const lat = (params.get("lat") || "").trim();
+        if (!to && !thua && !lng && !lat) return;
+
+        const era = params.get("era") === "old" ? "old" : "new";
+        switchEra(era);
+
+        let ward = (params.get("ward") || "").trim();
+        if (era === "old" && ward && !ward.startsWith("cu_")) {
+          const byId = Object.values(oldWardsByKey).find((w) => w.oldWardId === ward);
+          if (byId) ward = byId.oldKey;
+        }
+
+        const mode = params.get("mode") === "coord" || (lng && lat) ? "coord" : "plot";
+        if (mode === "coord") {
+          if (ward && Array.from(coordWardSelectEl.options).some((o) => o.value === ward)) {
+            coordWardSelectEl.value = ward;
+            updateCoordWardHint();
+          }
+          lngInputEl.value = lng;
+          latInputEl.value = lat;
+          switchSearchTab("coord");
+          handleCoordSearch();
+          return;
+        }
+
+        if (ward && Array.from(wardSelectEl.options).some((o) => o.value === ward)) {
+          wardSelectEl.value = ward;
+          updateWardHint();
+        }
+        sheetInputEl.value = to;
+        plotInputEl.value = thua;
+        switchSearchTab("plot");
+        handleSearch();
+      }
+
       initOldManifests();
       init();
       initSpatialManifest();
+      restoreFromUrlParams();
     </script>
   </body>
 </html>

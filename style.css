@@ -337,6 +337,122 @@ body.map-drawing .map-draw-banner {
   gap: 8px;
 }
 
+.paste-overlay-card {
+  position: absolute;
+  top: 52px;
+  left: 52px;
+  z-index: 1200;
+  width: min(350px, calc(100vw - 68px));
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.22);
+  backdrop-filter: blur(8px);
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeSlideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.map-tools-bar {
+  position: absolute;
+  top: 10px;
+  left: 52px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  max-width: calc(100% - 210px);
+}
+
+body.map-drawing .map-tools-bar {
+  display: none;
+}
+
+.map-tool-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.16);
+  backdrop-filter: blur(4px);
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.map-tool-pill:hover {
+  background: #ffffff;
+  border-color: #2563eb;
+  color: #1d4ed8;
+}
+
+.map-tool-pill.is-red:hover,
+.map-tool-pill.is-red.is-active {
+  background: #fef2f2;
+  border-color: #dc2626;
+  color: #b91c1c;
+}
+
+.paste-overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.paste-overlay-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #b91c1c;
+}
+
+.paste-dot-red {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18);
+  flex-shrink: 0;
+}
+
+.paste-overlay-status {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+  min-height: 16px;
+}
+
+.paste-overlay-status.is-ok {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.paste-overlay-status.is-err {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.btn-red {
+  background: #dc2626;
+}
+
+.btn-red:hover:not(:disabled) {
+  background: #b91c1c;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
 .map-pick-cancel {
   border: none;
   background: rgba(255, 255, 255, 0.18);
@@ -559,6 +675,23 @@ input[type="text"]:focus {
   background: #fef3c7;
   color: #b45309;
   border-color: #fcd34d;
+}
+
+.info-badge.is-drawn {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #93c5fd;
+}
+
+.map-tool-pill.is-clear-draw {
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.map-tool-pill.is-clear-draw:hover {
+  background: #dbeafe;
+  border-color: #2563eb;
 }
 
 .share-link-btn {
@@ -798,30 +931,6 @@ body.map-fullscreen .map-wrap {
   animation: spin 0.9s linear infinite;
 }
 
-.leaflet-draw-btn {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #ffffff;
-  color: #1e293b;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.15s, color 0.15s;
-}
-
-.leaflet-draw-btn:hover {
-  background: #f8fafc;
-  color: #2563eb;
-}
-
-.leaflet-draw-btn.is-active {
-  background: #eff6ff;
-  color: #2563eb;
-}
-
 @keyframes fadeSlideUp {
   from {
     opacity: 0;
@@ -936,6 +1045,21 @@ body.map-fullscreen .map-wrap {
 
 /* Tablet dọc & Mobile: Bản đồ toàn màn hình + thanh tìm kiếm nổi + Modal tìm kiếm + Sheet thông tin */
 @media (max-width: 860px) {
+  .map-tools-bar {
+    top: 72px;
+    left: 52px;
+    right: 12px;
+    max-width: none;
+  }
+
+  .paste-overlay-card {
+    top: 112px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-width: 380px;
+  }
+
   body {
     display: block;
     height: 100vh;

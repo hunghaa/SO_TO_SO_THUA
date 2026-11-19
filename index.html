@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Tra Cứu Thửa Đất Tây Ninh</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="mobileBackdrop" class="mobile-backdrop" aria-hidden="true"></div>
+
+    <header class="mobile-topbar" id="mobileTopbar">
+      <button
+        id="mobileOpenSearchBtn"
+        class="mobile-search-trigger"
+        type="button"
+        aria-label="Mở khung tra cứu thửa đất"
+      >
+        <span class="mobile-search-icon" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            width="18"
+            height="18"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m20 20-3.5-3.5"></path>
+          </svg>
+        </span>
+        <span class="mobile-search-copy">
+          <strong id="mobileTopTitle">Tra cứu thửa đất Tây Ninh</strong>
+          <small id="mobileTopSub"
+            >Chạm để chọn xã, nhập tờ &amp; số thửa</small
+          >
+        </span>
+        <span class="mobile-search-pill">Tìm kiếm</span>
+      </button>
+    </header>
+
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-row">
+          <h1>Tra Cứu Thửa Đất Tây Ninh</h1>
+          <button
+            id="sidebarCollapseBtn"
+            class="sidebar-collapse-btn"
+            type="button"
+            title="Thu gọn bảng tra cứu"
+          >
+            Ẩn bảng
+          </button>
+        </div>
+        <p id="catalogInfo">Đang tải danh mục xã/phường...</p>
+      </div>
+
+      <div
+        class="card search-card"
+        id="searchCard"
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby="searchModalTitle"
+      >
+        <div class="mobile-modal-header">
+          <h2 id="searchModalTitle">Tra cứu thửa đất</h2>
+          <button
+            id="closeSearchModalBtn"
+            class="mobile-close-btn"
+            type="button"
+            aria-label="Đóng khung tìm kiếm"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="field">
+          <label for="wardSelect">Xã / Phường</label>
+          <select id="wardSelect"></select>
+          <span class="hint" id="wardHint"></span>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="sheetInput">Tờ bản đồ</label>
+            <input
+              id="sheetInput"
+              type="text"
+              placeholder="Vd: 71 hoặc dc71"
+            />
+          </div>
+          <div class="field">
+            <label for="plotInput">Số thửa</label>
+            <input id="plotInput" type="text" placeholder="Vd: 51" />
+          </div>
+        </div>
+
+        <button id="searchBtn" class="btn">Tra cứu &amp; Xem bản đồ</button>
+
+        <div id="statusBox" class="status"></div>
+      </div>
+
+      <div
+        class="card info-card"
+        id="infoCard"
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby="infoModalTitle"
+      >
+        <div class="mobile-sheet-handle" aria-hidden="true"></div>
+        <div class="mobile-modal-header">
+          <h2 id="infoModalTitle">Thông tin Geo thửa đất</h2>
+          <button
+            id="closeInfoModalBtn"
+            class="mobile-close-btn"
+            type="button"
+            aria-label="Đóng thông tin thửa đất"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="info-header-row">
+          <h2 class="info-title">Thông tin Geo thửa đất</h2>
+          <span id="valPlotBadge" class="info-badge" hidden>—</span>
+        </div>
+
+        <p id="infoEmpty" class="info-empty">
+          Chọn xã, nhập số tờ &amp; số thửa rồi bấm
+          <b>Tra cứu &amp; Xem bản đồ</b> để hiển thị ranh thửa và Polygon
+          GeoJSON.
+        </p>
+
+        <div id="infoContent" class="info-content" hidden>
+          <div class="info-grid">
+            <div class="info-box full">
+              <div class="info-label">Xã / Phường</div>
+              <div class="info-value" id="valXaPhuong">—</div>
+            </div>
+            <div class="info-box">
+              <div class="info-label">Số tờ</div>
+              <div class="info-value" id="valSoTo">—</div>
+            </div>
+            <div class="info-box">
+              <div class="info-label">Số thửa</div>
+              <div class="info-value" id="valSoThua">—</div>
+            </div>
+            <div class="info-box">
+              <div class="info-label">Loại đất</div>
+              <div class="info-value" id="valLoaiDat">—</div>
+            </div>
+            <div class="info-box">
+              <div class="info-label">ID Xã</div>
+              <div class="info-value" id="valWardId">—</div>
+            </div>
+            <div class="info-box">
+              <div class="info-label">Diện tích (m²)</div>
+              <div class="info-value" id="valDienTich">—</div>
+            </div>
+            <div class="info-box">
+              <div class="info-label">Diện tích hình học (m²)</div>
+              <div class="info-value" id="valDienTichM2">—</div>
+            </div>
+            <div class="info-box full">
+              <div class="info-label">Tọa độ tâm (Lat, Lng)</div>
+              <div class="info-value" id="valCenter">—</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="geo-header">
+              <label for="geoOutput">Polygon GeoJSON</label>
+              <button
+                id="copyBtn"
+                class="btn btn-outline btn-copy-inline"
+                type="button"
+                disabled
+              >
+                Copy GeoJSON
+              </button>
+            </div>
+            <textarea
+              id="geoOutput"
+              class="geo-text"
+              readonly
+              placeholder="Chưa có dữ liệu..."
+            ></textarea>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="map-wrap" id="mapWrap">
+      <div id="map"></div>
+      <button
+        id="mapFullscreenBtn"
+        class="map-fullscreen-btn"
+        type="button"
+        aria-pressed="false"
+      >
+        Toàn màn hình
+      </button>
+    </main>
+
+    <div class="mobile-result-bar" id="mobileResultBar" aria-live="polite">
+      <button
+        id="mobileOpenInfoBtn"
+        class="mobile-result-summary"
+        type="button"
+      >
+        <strong id="mobileResultTitle">—</strong>
+        <span id="mobileResultMeta">—</span>
+      </button>
+      <div class="mobile-result-actions">
+        <button
+          id="mobileDetailBtn"
+          class="btn btn-outline mobile-action-btn"
+          type="button"
+        >
+          Chi tiết
+        </button>
+        <button
+          id="mobileReSearchBtn"
+          class="btn mobile-action-btn"
+          type="button"
+        >
+          Tìm khác
+        </button>
+      </div>
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+    <script src="./catalog.js"></script>
+    <script>
+      const map = L.map("map", {
+        maxZoom: 22,
+        zoomAnimation: true,
+        fadeAnimation: true,
+        markerZoomAnimation: true,
+      }).setView([11.05, 106.35], 11);
+
+      const osmLayer = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          maxNativeZoom: 19,
+          maxZoom: 22,
+          attribution: "&copy; OpenStreetMap contributors",
+        },
+      );
+
+      // Dùng cụm tile Google (mt0..mt3) kèm maxNativeZoom để tránh lỗi mất tile khi zoom sâu
+      function createGoogleLayer(lyrs) {
+        return L.tileLayer(
+          `https://{s}.google.com/vt/lyrs=${lyrs}&hl=vi&x={x}&y={y}&z={z}`,
+          {
+            subdomains: ["mt0", "mt1", "mt2", "mt3"],
+            maxNativeZoom: 20,
+            maxZoom: 22,
+            attribution: "&copy; Google Maps",
+          },
+        );
+      }
+
+      const googleStreetsLayer = createGoogleLayer("m");
+      const googleSatLayer = createGoogleLayer("s");
+      const googleHybridLayer = createGoogleLayer("y");
+
+      // Mặc định ban đầu mở bản đồ vệ tinh kèm tên đường
+      googleHybridLayer.addTo(map);
+      L.control
+        .layers(
+          {
+            "Vệ tinh + Tên đường (Google)": googleHybridLayer,
+            "Ảnh vệ tinh (Google)": googleSatLayer,
+            "Đường phố (Google)": googleStreetsLayer,
+            "Đường phố (OSM)": osmLayer,
+          },
+          null,
+          { position: "topright" },
+        )
+        .addTo(map);
+
+      const parcelLayerGroup = L.layerGroup().addTo(map);
+
+      const wardSelectEl = document.getElementById("wardSelect");
+      const wardHintEl = document.getElementById("wardHint");
+      const sheetInputEl = document.getElementById("sheetInput");
+      const plotInputEl = document.getElementById("plotInput");
+      const searchBtnEl = document.getElementById("searchBtn");
+      const statusBoxEl = document.getElementById("statusBox");
+      const catalogInfoEl = document.getElementById("catalogInfo");
+      const geoOutputEl = document.getElementById("geoOutput");
+      const copyBtnEl = document.getElementById("copyBtn");
+      const searchCardEl = document.getElementById("searchCard");
+      const infoCardEl = document.getElementById("infoCard");
+      const mapWrapEl = document.getElementById("mapWrap");
+      const mapFullscreenBtnEl = document.getElementById("mapFullscreenBtn");
+      const sidebarCollapseBtnEl =
+        document.getElementById("sidebarCollapseBtn");
+      const infoEmptyEl = document.getElementById("infoEmpty");
+      const infoContentEl = document.getElementById("infoContent");
+      const valPlotBadgeEl = document.getElementById("valPlotBadge");
+      const mobileBackdropEl = document.getElementById("mobileBackdrop");
+      const mobileOpenSearchBtnEl = document.getElementById(
+        "mobileOpenSearchBtn",
+      );
+      const closeSearchModalBtnEl = document.getElementById(
+        "closeSearchModalBtn",
+      );
+      const closeInfoModalBtnEl = document.getElementById("closeInfoModalBtn");
+      const mobileTopTitleEl = document.getElementById("mobileTopTitle");
+      const mobileTopSubEl = document.getElementById("mobileTopSub");
+      const mobileResultTitleEl = document.getElementById("mobileResultTitle");
+      const mobileResultMetaEl = document.getElementById("mobileResultMeta");
+      const mobileOpenInfoBtnEl = document.getElementById("mobileOpenInfoBtn");
+      const mobileDetailBtnEl = document.getElementById("mobileDetailBtn");
+      const mobileReSearchBtnEl = document.getElementById("mobileReSearchBtn");
+
+      function refreshMapSize() {
+        requestAnimationFrame(() => map.invalidateSize());
+      }
+
+      function isCompactViewport() {
+        return window.matchMedia("(max-width: 860px)").matches;
+      }
+
+      function prefersReducedMotion() {
+        return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      }
+
+      function syncMobileModalA11y() {
+        const compact = isCompactViewport();
+        const searchOpen =
+          document.body.classList.contains("mobile-search-open");
+        const infoOpen = document.body.classList.contains("mobile-info-open");
+        searchCardEl.setAttribute("aria-modal", String(compact && searchOpen));
+        infoCardEl.setAttribute("aria-modal", String(compact && infoOpen));
+        mobileBackdropEl.setAttribute(
+          "aria-hidden",
+          String(!(compact && (searchOpen || infoOpen))),
+        );
+      }
+
+      function closeMobileModals() {
+        document.body.classList.remove(
+          "mobile-search-open",
+          "mobile-info-open",
+        );
+        syncMobileModalA11y();
+      }
+
+      function openSearchModal() {
+        if (!isCompactViewport()) return;
+        document.body.classList.remove("mobile-info-open");
+        document.body.classList.add("mobile-search-open");
+        syncMobileModalA11y();
+        setTimeout(() => {
+          if (!sheetInputEl.value.trim()) sheetInputEl.focus();
+        }, 120);
+      }
+
+      function openInfoModal() {
+        if (!isCompactViewport()) return;
+        document.body.classList.remove("mobile-search-open");
+        document.body.classList.add("mobile-info-open");
+        syncMobileModalA11y();
+      }
+
+      function setMapFullscreen(enabled) {
+        document.body.classList.toggle("map-fullscreen", enabled);
+        mapFullscreenBtnEl.setAttribute("aria-pressed", String(enabled));
+        mapFullscreenBtnEl.textContent = enabled
+          ? "Mở bảng tra cứu"
+          : "Toàn màn hình";
+        refreshMapSize();
+      }
+
+      const PARCEL_API_URL =
+        "https://apidgn.thongtin.land/v1/dgn-data/app-call/search/page-and-plot/location-new";
+
+      let sheetsByWard = {};
+      let wardsById = {};
+
+      function safeFloat(value) {
+        if (value === null || value === undefined || value === "") return null;
+        if (typeof value === "number")
+          return Number.isFinite(value) ? value : null;
+        const num = Number(String(value).trim().replace(",", "."));
+        return Number.isFinite(num) ? num : null;
+      }
+
+      function parseGeometryObject(rawGeo) {
+        if (rawGeo && typeof rawGeo === "object") {
+          return [JSON.stringify(rawGeo), rawGeo];
+        }
+        if (typeof rawGeo === "string") {
+          const geoStr = rawGeo.trim();
+          if (!geoStr) return ["", null];
+          try {
+            const parsed = JSON.parse(geoStr);
+            return [
+              geoStr,
+              parsed && typeof parsed === "object" && !Array.isArray(parsed)
+                ? parsed
+                : null,
+            ];
+          } catch {
+            return [geoStr, null];
+          }
+        }
+        return ["", null];
+      }
+
+      function extractParcel(dl, wardId, wardAddress, sheet, plotStr) {
+        const rawPlot = dl.number_plot;
+        let soThua = plotStr;
+        if (
+          rawPlot !== null &&
+          rawPlot !== undefined &&
+          String(rawPlot).trim() !== ""
+        ) {
+          soThua = String(rawPlot).trim();
+        } else if (
+          dl.text !== null &&
+          dl.text !== undefined &&
+          String(dl.text).trim() !== ""
+        ) {
+          soThua = String(dl.text).trim();
+        }
+
+        const [polygonGeojson, geometryObj] = parseGeometryObject(
+          dl.geojsonwgs84,
+        );
+
+        return {
+          xa_phuong: String(dl.address || wardAddress || "").trim(),
+          ward_id: String(
+            dl.idxa !== null && dl.idxa !== undefined && dl.idxa !== ""
+              ? dl.idxa
+              : wardId,
+          ).trim(),
+          so_to: String(
+            dl.number_page || sheet.nameString.toUpperCase(),
+          ).trim(),
+          so_thua: soThua,
+          loai_dat: String(dl.code || "").trim(),
+          dien_tich: safeFloat(dl.area),
+          dien_tich_m2: safeFloat(dl.area_m2),
+          polygon_geojson: polygonGeojson,
+          geometry_obj: geometryObj,
+        };
+      }
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      async function lookupParcelDirect(wardId, sheet, plotStr) {
+        const wardAddress = wardsById[wardId]?.address || "";
+        const payload = {
+          layerId: sheet.dgnLayerId,
+          year: 2026,
+          number_page: null,
+          number_plot: plotStr,
+          provinceId: "80",
+          districtId: null,
+          wardId: String(wardId),
+          view: true,
+          name_thua: sheet.nameString,
+          seeQH: false,
+        };
+
+        const maxAttempts = 5;
+        let lastError = "Không thể kết nối tới API tra cứu.";
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          if (attempt > 1) {
+            setStatus(
+              "loading",
+              `API phản hồi chậm, đang thử lại (${attempt}/${maxAttempts}): ${sheet.nameString.toUpperCase()}, thửa ${plotStr}...`,
+            );
+            await sleep(Math.min(700 * (attempt - 1), 2500));
+          }
+
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 20000);
+          try {
+            const resp = await fetch(PARCEL_API_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+              signal: controller.signal,
+            });
+            clearTimeout(timer);
+
+            if (resp.status === 401 || resp.status === 403) {
+              throw new Error(`API yêu cầu xác thực (HTTP ${resp.status}).`);
+            }
+
+            let data = null;
+            try {
+              data = await resp.json();
+            } catch {
+              data = null;
+            }
+
+            if (resp.status === 429) {
+              lastError = "API đang giới hạn tần suất (HTTP 429).";
+              await sleep(2500);
+              continue;
+            }
+
+            if (
+              resp.status >= 500 ||
+              (resp.status !== 200 &&
+                resp.status !== 201 &&
+                resp.status !== 404)
+            ) {
+              lastError = `Lỗi máy chủ API (HTTP ${resp.status}).`;
+              continue;
+            }
+
+            if (!data || typeof data !== "object") {
+              lastError = "Phản hồi từ API không đúng định dạng JSON.";
+              continue;
+            }
+
+            const msg = String(data.message || "").trim();
+            if (data.statusCode === 401 || data.statusCode === 403) {
+              throw new Error(`Lỗi xác thực API (${data.statusCode}): ${msg}`);
+            }
+
+            const dl = data.dataLocation;
+            if (data.success === true && dl && typeof dl === "object") {
+              return {
+                found: true,
+                parcel: extractParcel(dl, wardId, wardAddress, sheet, plotStr),
+                meta: {
+                  id: dl.id,
+                  location: dl.location,
+                  point: dl.point,
+                  arrYear: dl.arrYear,
+                  dgnLayerId: sheet.dgnLayerId,
+                  nameString: sheet.nameString,
+                },
+              };
+            }
+
+            if (
+              (data.success === false && msg === "Khong tim thay thong tin!") ||
+              (data.success === true && dl == null)
+            ) {
+              return {
+                found: false,
+                message: msg || "Khong tim thay thong tin!",
+              };
+            }
+
+            lastError = msg || `Phản hồi lỗi tạm thời từ API.`;
+          } catch (err) {
+            clearTimeout(timer);
+            if (err.message && err.message.includes("xác thực")) throw err;
+            lastError =
+              err.name === "AbortError"
+                ? "Quá thời gian chờ phản hồi API."
+                : err.message;
+          }
+        }
+
+        throw new Error(lastError);
+      }
+
+      function escapeHtml(text) {
+        const div = document.createElement("div");
+        div.textContent = text == null ? "" : String(text);
+        return div.innerHTML;
+      }
+
+      function formatNumber(val) {
+        if (val === null || val === undefined || val === "") return "—";
+        const n = Number(val);
+        return Number.isNaN(n)
+          ? String(val)
+          : n.toLocaleString("vi-VN", { maximumFractionDigits: 2 });
+      }
+
+      function setStatus(type, msg) {
+        statusBoxEl.className = `status show ${type}`;
+        statusBoxEl.textContent = msg;
+      }
+
+      function findSheetInWard(wardId, rawInput) {
+        const sheets = sheetsByWard[wardId] || [];
+        const text = String(rawInput || "")
+          .trim()
+          .toLowerCase();
+        if (!text) return null;
+
+        // Cho phép nhập "71", "dc71", "DC071"...
+        const numText = text.replace(/^dc/i, "").replace(/^0+/, "") || text;
+
+        return (
+          sheets.find((s) => s.nameString.toLowerCase() === text) ||
+          sheets.find(
+            (s) => s.nameNumber != null && String(s.nameNumber) === numText,
+          ) ||
+          null
+        );
+      }
+
+      function updateWardHint() {
+        const sheets = sheetsByWard[wardSelectEl.value] || [];
+        if (!sheets.length) {
+          wardHintEl.textContent = "";
+          return;
+        }
+
+        const nums = sheets.map((s) => s.nameNumber).filter((n) => n != null);
+        if (nums.length) {
+          const min = Math.min(...nums);
+          const max = Math.max(...nums);
+          wardHintEl.textContent = `Có ${sheets.length} tờ bản đồ (từ tờ ${min} đến ${max})`;
+        } else {
+          wardHintEl.textContent = `Có ${sheets.length} tờ bản đồ`;
+        }
+      }
+
+      function renderParcel(data) {
+        const p = data.parcel;
+        const meta = data.meta || {};
+
+        infoEmptyEl.hidden = true;
+        infoContentEl.hidden = false;
+        valPlotBadgeEl.hidden = false;
+        valPlotBadgeEl.textContent = `Tờ ${p.so_to} • Thửa ${p.so_thua}`;
+
+        document.getElementById("valXaPhuong").textContent = p.xa_phuong || "—";
+        document.getElementById("valSoTo").textContent = p.so_to || "—";
+        document.getElementById("valSoThua").textContent = p.so_thua || "—";
+        document.getElementById("valLoaiDat").textContent = p.loai_dat || "—";
+        document.getElementById("valWardId").textContent = p.ward_id || "—";
+        document.getElementById("valDienTich").textContent =
+          p.dien_tich != null ? `${formatNumber(p.dien_tich)} m²` : "—";
+        document.getElementById("valDienTichM2").textContent =
+          p.dien_tich_m2 != null ? `${formatNumber(p.dien_tich_m2)} m²` : "—";
+
+        const loc = meta.location;
+        if (loc && loc.y != null && loc.x != null) {
+          document.getElementById("valCenter").textContent =
+            `${Number(loc.y).toFixed(6)}, ${Number(loc.x).toFixed(6)}`;
+        } else {
+          document.getElementById("valCenter").textContent = meta.point || "—";
+        }
+
+        geoOutputEl.value = p.polygon_geojson || "";
+        copyBtnEl.disabled = !p.polygon_geojson;
+
+        document.body.classList.add("has-parcel-result");
+        const titleText = `Tờ ${p.so_to} - Thửa ${p.so_thua}`;
+        const areaText =
+          p.dien_tich != null ? `${formatNumber(p.dien_tich)} m²` : "—";
+        mobileTopTitleEl.textContent = titleText;
+        mobileTopSubEl.textContent = p.xa_phuong || "Tây Ninh";
+        mobileResultTitleEl.textContent = titleText;
+        mobileResultMetaEl.textContent = `${p.xa_phuong || "—"} • ${p.loai_dat || "—"} • ${areaText}`;
+
+        infoCardEl.classList.remove("info-updated");
+        void infoCardEl.offsetWidth;
+        infoCardEl.classList.add("info-updated");
+
+        if (isCompactViewport()) {
+          closeMobileModals();
+        }
+
+        parcelLayerGroup.clearLayers();
+        if (p.geometry_obj) {
+          const geoLayer = L.geoJSON(
+            { type: "Feature", geometry: p.geometry_obj, properties: p },
+            {
+              style: {
+                className: "parcel-polygon-anim",
+                color: "#22c55e",
+                weight: 3,
+                fillColor: "#22c55e",
+                fillOpacity: 0.28,
+              },
+            },
+          ).addTo(parcelLayerGroup);
+
+          const popupHtml = `
+          <div style="font-size:13px;line-height:1.5;min-width:150px;">
+            <div style="font-weight:700;color:#15803d;margin-bottom:4px;">
+              Tờ ${escapeHtml(p.so_to)} - Thửa ${escapeHtml(p.so_thua)}
+            </div>
+            <div><b>Xã/Phường:</b> ${escapeHtml(p.xa_phuong)}</div>
+            <div><b>Loại đất:</b> ${escapeHtml(p.loai_dat || "—")}</div>
+            <div><b>Diện tích:</b> ${escapeHtml(formatNumber(p.dien_tich))} m²</div>
+          </div>
+        `;
+          geoLayer.bindPopup(popupHtml, { maxWidth: 260 }).openPopup();
+
+          const bounds = geoLayer.getBounds();
+          const markerCenter =
+            loc && loc.y != null && loc.x != null
+              ? [Number(loc.y), Number(loc.x)]
+              : bounds.isValid()
+                ? bounds.getCenter()
+                : null;
+
+          if (markerCenter) {
+            L.marker(markerCenter, {
+              interactive: false,
+              icon: L.divIcon({
+                className: "parcel-pulse-icon",
+                html: '<span class="parcel-pulse-ring"></span><span class="parcel-pulse-dot"></span>',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12],
+              }),
+            }).addTo(parcelLayerGroup);
+          }
+
+          if (bounds.isValid()) {
+            map.invalidateSize();
+            const fitOpts = isCompactViewport()
+              ? {
+                  paddingTopLeft: [20, 88],
+                  paddingBottomRight: [20, 110],
+                  maxZoom: 19,
+                }
+              : { padding: [60, 60], maxZoom: 19 };
+
+            if (prefersReducedMotion()) {
+              map.fitBounds(bounds, fitOpts);
+            } else {
+              map.flyToBounds(bounds, {
+                ...fitOpts,
+                duration: 0.9,
+                easeLinearity: 0.25,
+              });
+            }
+          }
+        }
+      }
+
+      async function handleSearch() {
+        const wardId = wardSelectEl.value;
+        const sheetRaw = sheetInputEl.value.trim();
+        const plotRaw = plotInputEl.value.trim();
+
+        if (!wardId) {
+          setStatus("warn", "Vui lòng chọn Xã / Phường.");
+          return;
+        }
+        if (!sheetRaw) {
+          setStatus("warn", "Vui lòng nhập số Tờ bản đồ.");
+          sheetInputEl.focus();
+          return;
+        }
+        if (!plotRaw) {
+          setStatus("warn", "Vui lòng nhập Số thửa.");
+          plotInputEl.focus();
+          return;
+        }
+
+        const sheet = findSheetInWard(wardId, sheetRaw);
+        if (!sheet) {
+          const wardName =
+            wardSelectEl.options[wardSelectEl.selectedIndex]?.text || wardId;
+          setStatus(
+            "warn",
+            `Không tìm thấy tờ "${sheetRaw}" trong ${wardName}.`,
+          );
+          return;
+        }
+
+        searchBtnEl.disabled = true;
+        setStatus(
+          "loading",
+          `Đang gọi API: ${sheet.nameString.toUpperCase()}, thửa ${plotRaw}...`,
+        );
+
+        try {
+          const data = await lookupParcelDirect(wardId, sheet, plotRaw);
+
+          if (data.found) {
+            setStatus(
+              "ok",
+              `Tìm thấy thửa ${data.parcel.so_thua} (${data.parcel.so_to}).`,
+            );
+            renderParcel(data);
+          } else {
+            setStatus(
+              "warn",
+              `Không tìm thấy thông tin thửa ${plotRaw} của tờ ${sheet.nameString.toUpperCase()}.`,
+            );
+          }
+        } catch (err) {
+          setStatus("err", `Lỗi tra cứu: ${err.message}`);
+        } finally {
+          searchBtnEl.disabled = false;
+        }
+      }
+
+      wardSelectEl.addEventListener("change", () => {
+        updateWardHint();
+        const sheets = sheetsByWard[wardSelectEl.value] || [];
+        const firstWithCenter = sheets.find((s) => Array.isArray(s.center));
+        if (firstWithCenter) {
+          if (prefersReducedMotion()) {
+            map.setView(firstWithCenter.center, 14);
+          } else {
+            map.flyTo(firstWithCenter.center, 14, {
+              duration: 0.85,
+              easeLinearity: 0.25,
+            });
+          }
+        }
+      });
+
+      searchBtnEl.addEventListener("click", handleSearch);
+      sheetInputEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleSearch();
+      });
+      plotInputEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleSearch();
+      });
+
+      let copyResetTimer = null;
+      copyBtnEl.addEventListener("click", async () => {
+        if (!geoOutputEl.value) return;
+        try {
+          await navigator.clipboard.writeText(geoOutputEl.value);
+        } catch {
+          geoOutputEl.select();
+          document.execCommand("copy");
+        }
+        setStatus("ok", "Đã copy Polygon GeoJSON.");
+        copyBtnEl.textContent = "✓ Đã copy GeoJSON";
+        clearTimeout(copyResetTimer);
+        copyResetTimer = setTimeout(() => {
+          copyBtnEl.textContent = "Copy GeoJSON";
+        }, 1600);
+      });
+
+      function init() {
+        const data = window.PARCEL_CATALOG;
+        if (!data || !Array.isArray(data.wards)) {
+          catalogInfoEl.textContent = "Lỗi tải danh mục tĩnh.";
+          mobileTopSubEl.textContent = "Lỗi tải danh mục tĩnh";
+          setStatus("err", "Không tìm thấy dữ liệu trong catalog.js.");
+          return;
+        }
+
+        sheetsByWard = data.sheetsByWard || {};
+        wardsById = Object.fromEntries(data.wards.map((w) => [w.wardId, w]));
+
+        const wards = data.wards
+          .slice()
+          .sort((a, b) => a.address.localeCompare(b.address, "vi"));
+
+        wardSelectEl.innerHTML = "";
+        wards.forEach((w) => {
+          const opt = document.createElement("option");
+          opt.value = w.wardId;
+          opt.textContent = `${w.address} (${w.wardId})`;
+          wardSelectEl.appendChild(opt);
+        });
+
+        const summaryText = `${data.totalWards} xã/phường • ${data.totalSheets.toLocaleString("vi-VN")} tờ bản đồ`;
+        catalogInfoEl.textContent = summaryText;
+        mobileTopSubEl.textContent = `${summaryText} • Chạm để tra cứu`;
+
+        if (wards.some((w) => w.wardId === "28177")) {
+          wardSelectEl.value = "28177";
+          // sheetInputEl.value = "71";
+          // plotInputEl.value = "51";
+        }
+        updateWardHint();
+      }
+
+      mobileOpenSearchBtnEl.addEventListener("click", openSearchModal);
+      mobileReSearchBtnEl.addEventListener("click", openSearchModal);
+      mobileOpenInfoBtnEl.addEventListener("click", openInfoModal);
+      mobileDetailBtnEl.addEventListener("click", openInfoModal);
+      closeSearchModalBtnEl.addEventListener("click", closeMobileModals);
+      closeInfoModalBtnEl.addEventListener("click", closeMobileModals);
+      mobileBackdropEl.addEventListener("click", closeMobileModals);
+
+      sidebarCollapseBtnEl.addEventListener("click", () => {
+        setMapFullscreen(true);
+      });
+
+      mapFullscreenBtnEl.addEventListener("click", () => {
+        setMapFullscreen(!document.body.classList.contains("map-fullscreen"));
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key !== "Escape") return;
+        if (
+          document.body.classList.contains("mobile-search-open") ||
+          document.body.classList.contains("mobile-info-open")
+        ) {
+          closeMobileModals();
+          return;
+        }
+        if (document.body.classList.contains("map-fullscreen")) {
+          setMapFullscreen(false);
+        }
+      });
+
+      const handleViewportChange = () => {
+        if (!isCompactViewport()) {
+          closeMobileModals();
+        } else {
+          syncMobileModalA11y();
+        }
+        refreshMapSize();
+      };
+
+      window.addEventListener("resize", handleViewportChange);
+      window.addEventListener("orientationchange", handleViewportChange);
+      if (typeof ResizeObserver !== "undefined") {
+        new ResizeObserver(refreshMapSize).observe(mapWrapEl);
+      }
+
+      init();
+    </script>
+  </body>
+</html>

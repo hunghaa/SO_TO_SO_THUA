@@ -90,6 +90,27 @@
           </button>
         </div>
 
+        <div class="era-tabs" role="tablist" aria-label="Giai đoạn bản đồ">
+          <button
+            id="eraNewBtn"
+            class="era-tab active"
+            type="button"
+            role="tab"
+            aria-selected="true"
+          >
+            Sau sáp nhập (2026)
+          </button>
+          <button
+            id="eraOldBtn"
+            class="era-tab era-old"
+            type="button"
+            role="tab"
+            aria-selected="false"
+          >
+            Trước sáp nhập (Cũ)
+          </button>
+        </div>
+
         <div class="search-tabs" role="tablist" aria-label="Chế độ tra cứu">
           <button
             id="tabPlotBtn"
@@ -140,7 +161,7 @@
 
         <div id="coordPanel" class="search-panel" role="tabpanel" aria-labelledby="tabCoordBtn" hidden>
           <div class="field">
-            <label for="coordWardSelect">Xã / Phường (đã có dữ liệu)</label>
+            <label for="coordWardSelect">Xã / Phường (đã có dữ liệu tọa độ)</label>
             <select id="coordWardSelect"></select>
             <span class="hint" id="coordWardHint"></span>
           </div>
@@ -261,6 +282,10 @@
               <div class="info-label">Diện tích hình học (m²)</div>
               <div class="info-value" id="valDienTichM2">—</div>
             </div>
+            <div class="info-box full highlight-qh" id="boxQuyHoach" hidden>
+              <div class="info-label">Quy hoạch tóm tắt</div>
+              <div class="info-value" id="valQuyHoach">—</div>
+            </div>
             <div class="info-box full">
               <div class="info-label">Tọa độ tâm (Lat, Lng)</div>
               <div class="info-value" id="valCenter">—</div>
@@ -359,6 +384,8 @@
     ></script>
     <script src="./catalog.js"></script>
     <script src="./spatial_tiles/manifest.js"></script>
+    <script src="./old_sheets/manifest.js"></script>
+    <script src="./old_spatial_tiles/manifest.js"></script>
     <script>
       const map = L.map("map", {
         maxZoom: 22,
@@ -438,6 +465,8 @@
       const sheetInputEl = document.getElementById("sheetInput");
       const plotInputEl = document.getElementById("plotInput");
       const searchBtnEl = document.getElementById("searchBtn");
+      const eraNewBtnEl = document.getElementById("eraNewBtn");
+      const eraOldBtnEl = document.getElementById("eraOldBtn");
       const tabPlotBtnEl = document.getElementById("tabPlotBtn");
       const tabCoordBtnEl = document.getElementById("tabCoordBtn");
       const plotPanelEl = document.getElementById("plotPanel");
@@ -456,6 +485,8 @@
       const copyBtnEl = document.getElementById("copyBtn");
       const wktOutputEl = document.getElementById("wktOutput");
       const copyWktBtnEl = document.getElementById("copyWktBtn");
+      const boxQuyHoachEl = document.getElementById("boxQuyHoach");
+      const valQuyHoachEl = document.getElementById("valQuyHoach");
       const searchCardEl = document.getElementById("searchCard");
       const infoCardEl = document.getElementById("infoCard");
       const mapWrapEl = document.getElementById("mapWrap");
@@ -754,6 +785,10 @@
         statusBoxEl.textContent = msg;
       }
 
+      let searchEra = "new";
+      let oldWardsByKey = {};
+      let oldSpatialWardsByKey = {};
+
       function findSheetInWard(wardId, rawInput) {
         const sheets = sheetsByWard[wardId] || [];
         const text = String(rawInput || "")
@@ -773,7 +808,32 @@
         );
       }
 
+      function findOldSheet(oldKey, rawInput) {
+        const w = oldWardsByKey[oldKey];
+        const sheets = w?.sheets || [];
+        const text = String(rawInput || "").trim().toLowerCase();
+        if (!text || !sheets.length) return null;
+        const stripped = text.replace(/^dc/i, "").replace(/^0+/, "") || text;
+        return (
+          sheets.find((s) => s.toLowerCase() === text) ||
+          sheets.find((s) => (s.replace(/^0+/, "") || s).toLowerCase() === stripped) ||
+          null
+        );
+      }
+
       function updateWardHint() {
+        if (searchEra === "old") {
+          const w = oldWardsByKey[wardSelectEl.value];
+          if (!w || !w.sheets?.length) {
+            wardHintEl.textContent = "Chưa có dữ liệu tờ bản đồ trước sáp nhập.";
+            return;
+          }
+          const min = w.sheets[0];
+          const max = w.sheets[w.sheets.length - 1];
+          wardHintEl.textContent = `Thuộc ${w.newName} • ${w.sheetCount} tờ (từ tờ ${min} đến ${max}) • ${w.parcelCount.toLocaleString("vi-VN")} thửa`;
+          return;
+        }
+
         const sheets = sheetsByWard[wardSelectEl.value] || [];
         if (!sheets.length) {
           wardHintEl.textContent = "";
@@ -826,11 +886,15 @@
       function renderParcel(data) {
         const p = data.parcel;
         const meta = data.meta || {};
+        const isOld = meta.era === "old";
 
         infoEmptyEl.hidden = true;
         infoContentEl.hidden = false;
         valPlotBadgeEl.hidden = false;
-        valPlotBadgeEl.textContent = `Tờ ${p.so_to} • Thửa ${p.so_thua}`;
+        valPlotBadgeEl.classList.toggle("is-old", isOld);
+        valPlotBadgeEl.textContent = isOld
+          ? `Trước sáp nhập • Tờ ${p.so_to} • Thửa ${p.so_thua}`
+          : `Tờ ${p.so_to} • Thửa ${p.so_thua}`;
 
         document.getElementById("valXaPhuong").textContent = p.xa_phuong || "—";
         document.getElementById("valSoTo").textContent = p.so_to || "—";
@@ -841,6 +905,14 @@
           p.dien_tich != null ? `${formatNumber(p.dien_tich)} m²` : "—";
         document.getElementById("valDienTichM2").textContent =
           p.dien_tich_m2 != null ? `${formatNumber(p.dien_tich_m2)} m²` : "—";
+
+        if (p.quy_hoach) {
+          boxQuyHoachEl.hidden = false;
+          valQuyHoachEl.textContent = p.quy_hoach;
+        } else {
+          boxQuyHoachEl.hidden = true;
+          valQuyHoachEl.textContent = "—";
+        }
 
         const loc = meta.location;
         if (loc && loc.y != null && loc.x != null) {
@@ -876,27 +948,34 @@
 
         parcelLayerGroup.clearLayers();
         if (p.geometry_obj) {
+          const polyColor = meta.era === "old" ? "#d97706" : "#22c55e";
           const geoLayer = L.geoJSON(
             { type: "Feature", geometry: p.geometry_obj, properties: p },
             {
               style: {
                 className: "parcel-polygon-anim",
-                color: "#22c55e",
+                color: polyColor,
                 weight: 3,
-                fillColor: "#22c55e",
+                fillColor: polyColor,
                 fillOpacity: 0.28,
               },
             },
           ).addTo(parcelLayerGroup);
 
+          const qhRow = p.quy_hoach
+            ? `<div><b>Quy hoạch:</b> ${escapeHtml(p.quy_hoach)}</div>`
+            : "";
+          const titleColor = meta.era === "old" ? "#b45309" : "#15803d";
+          const eraTag = meta.era === "old" ? " (Trước sáp nhập)" : "";
           const popupHtml = `
-          <div style="font-size:13px;line-height:1.5;min-width:150px;">
-            <div style="font-weight:700;color:#15803d;margin-bottom:4px;">
-              Tờ ${escapeHtml(p.so_to)} - Thửa ${escapeHtml(p.so_thua)}
+          <div style="font-size:13px;line-height:1.5;min-width:160px;">
+            <div style="font-weight:700;color:${titleColor};margin-bottom:4px;">
+              Tờ ${escapeHtml(p.so_to)} - Thửa ${escapeHtml(p.so_thua)}${eraTag}
             </div>
             <div><b>Xã/Phường:</b> ${escapeHtml(p.xa_phuong)}</div>
             <div><b>Loại đất:</b> ${escapeHtml(p.loai_dat || "—")}</div>
             <div><b>Diện tích:</b> ${escapeHtml(formatNumber(p.dien_tich))} m²</div>
+            ${qhRow}
           </div>
         `;
           geoLayer.bindPopup(popupHtml, { maxWidth: 260 }).openPopup();
@@ -944,7 +1023,7 @@
         }
       }
 
-      const spatialTilePromises = new Map();
+      const dynamicScriptPromises = new Map();
       let spatialWardsById = {};
       let mapPickActive = false;
 
@@ -969,6 +1048,21 @@
       }
 
       function updateCoordWardHint() {
+        if (searchEra === "old") {
+          if (!window.OLD_SPATIAL_MANIFEST) {
+            coordWardHintEl.textContent =
+              "Chưa tải được ./old_spatial_tiles/manifest.js.";
+            return;
+          }
+          const w = oldSpatialWardsByKey[coordWardSelectEl.value];
+          if (!w) {
+            coordWardHintEl.textContent = "Chưa có dữ liệu tọa độ trước sáp nhập.";
+            return;
+          }
+          coordWardHintEl.textContent = `Thuộc ${w.newName} • Sẵn sàng ${w.parcelCount.toLocaleString("vi-VN")} thửa cũ`;
+          return;
+        }
+
         if (!window.SPATIAL_MANIFEST) {
           coordWardHintEl.textContent =
             "Chưa tải được ./spatial_tiles/manifest.js (nếu đang chạy web_app.py, hãy khởi động lại server).";
@@ -1036,19 +1130,56 @@
         return true;
       }
 
-      function loadSpatialTile(wardId, gx, gy) {
-        const cacheKey = `${wardId}/${gx}_${gy}`;
-        const cache = (window.__SPATIAL_CACHE = window.__SPATIAL_CACHE || {});
+      function pointInGeometry(lng, lat, gtypeCode, coords) {
+        if (gtypeCode === 0) {
+          return pointInPolygonRings(lng, lat, coords);
+        }
+        if (gtypeCode === 1 && Array.isArray(coords)) {
+          return coords.some((polyRings) => pointInPolygonRings(lng, lat, polyRings));
+        }
+        return false;
+      }
+
+      function decodeOldGeometry(gtypeCode, coords) {
+        return {
+          type: gtypeCode === 1 ? "MultiPolygon" : "Polygon",
+          coordinates: coords,
+        };
+      }
+
+      function computeGeometryCenter(geomObj) {
+        const rings =
+          geomObj?.type === "MultiPolygon"
+            ? (geomObj.coordinates?.[0] || [])
+            : (geomObj?.coordinates || []);
+        const outer = rings[0];
+        if (!Array.isArray(outer) || !outer.length) return null;
+        let minx = Infinity;
+        let miny = Infinity;
+        let maxx = -Infinity;
+        let maxy = -Infinity;
+        for (const pt of outer) {
+          if (pt[0] < minx) minx = pt[0];
+          if (pt[0] > maxx) maxx = pt[0];
+          if (pt[1] < miny) miny = pt[1];
+          if (pt[1] > maxy) maxy = pt[1];
+        }
+        return { x: (minx + maxx) * 0.5, y: (miny + maxy) * 0.5 };
+      }
+
+      function loadCacheScript(src, cacheGlobalName, cacheKey) {
+        const cache = (window[cacheGlobalName] = window[cacheGlobalName] || {});
         if (Object.prototype.hasOwnProperty.call(cache, cacheKey)) {
           return Promise.resolve(cache[cacheKey]);
         }
-        if (spatialTilePromises.has(cacheKey)) {
-          return spatialTilePromises.get(cacheKey);
+        const promiseKey = `${cacheGlobalName}:${cacheKey}`;
+        if (dynamicScriptPromises.has(promiseKey)) {
+          return dynamicScriptPromises.get(promiseKey);
         }
 
         const promise = new Promise((resolve) => {
           const script = document.createElement("script");
-          script.src = `./spatial_tiles/${wardId}/${gx}_${gy}.js`;
+          script.src = src;
           script.async = true;
           script.onload = () => {
             script.remove();
@@ -1062,8 +1193,122 @@
           document.head.appendChild(script);
         });
 
-        spatialTilePromises.set(cacheKey, promise);
+        dynamicScriptPromises.set(promiseKey, promise);
         return promise;
+      }
+
+      function loadSpatialTile(wardId, gx, gy) {
+        return loadCacheScript(
+          `./spatial_tiles/${wardId}/${gx}_${gy}.js`,
+          "__SPATIAL_CACHE",
+          `${wardId}/${gx}_${gy}`,
+        );
+      }
+
+      function loadOldSheet(oldKey, soTo) {
+        return loadCacheScript(
+          `./old_sheets/${oldKey}/${encodeURIComponent(soTo)}.js`,
+          "__OLD_SHEET_CACHE",
+          `${oldKey}/${soTo}`,
+        );
+      }
+
+      function loadOldSpatialTile(oldKey, gx, gy) {
+        return loadCacheScript(
+          `./old_spatial_tiles/${oldKey}/${gx}_${gy}.js`,
+          "__OLD_SPATIAL_CACHE",
+          `${oldKey}/${gx}_${gy}`,
+        );
+      }
+
+      function buildOldParcelResponse(wardMeta, soTo, soThua, loaiDat, dienTich, qhTomTat, geomObj, center) {
+        return {
+          found: true,
+          parcel: {
+            xa_phuong: `${wardMeta.oldName} → ${wardMeta.newName}`,
+            ward_id: `${wardMeta.oldWardId} (cũ)`,
+            so_to: String(soTo),
+            so_thua: String(soThua),
+            loai_dat: loaiDat || "",
+            dien_tich: dienTich,
+            dien_tich_m2: null,
+            quy_hoach: qhTomTat || "",
+            polygon_geojson: JSON.stringify(geomObj),
+            geometry_obj: geomObj,
+          },
+          meta: {
+            era: "old",
+            location: center,
+          },
+        };
+      }
+
+      async function lookupOldParcelByPlot(oldKey, sheetName, plotRaw) {
+        const wardMeta = oldWardsByKey[oldKey];
+        if (!wardMeta) return { found: false };
+        const sheetMap = await loadOldSheet(oldKey, sheetName);
+        if (!sheetMap || typeof sheetMap !== "object") return { found: false };
+
+        const targetPlot = String(plotRaw || "").trim();
+        const normalizedPlot = targetPlot.replace(/^0+/, "") || targetPlot;
+        const record = sheetMap[targetPlot] || sheetMap[normalizedPlot];
+        if (!Array.isArray(record)) return { found: false };
+
+        const [loaiDat, dienTich, qhTomTat, gtypeCode, coords] = record;
+        const geomObj = decodeOldGeometry(gtypeCode, coords);
+        const center = computeGeometryCenter(geomObj);
+        return buildOldParcelResponse(
+          wardMeta,
+          sheetName,
+          sheetMap[targetPlot] ? targetPlot : normalizedPlot,
+          loaiDat,
+          dienTich,
+          qhTomTat,
+          geomObj,
+          center,
+        );
+      }
+
+      async function lookupOldParcelByCoord(oldKey, lng, lat) {
+        const manifest = window.OLD_SPATIAL_MANIFEST;
+        const step = manifest?.step || 0.0025;
+        const gx = Math.floor(lng / step);
+        const gy = Math.floor(lat / step);
+        const items = await loadOldSpatialTile(oldKey, gx, gy);
+        if (!Array.isArray(items) || !items.length) return null;
+
+        const candidates = [];
+        for (const item of items) {
+          const bbox = item[5];
+          if (lng >= bbox[0] && lng <= bbox[2] && lat >= bbox[1] && lat <= bbox[3]) {
+            const areaApprox = (bbox[2] - bbox[0]) * (bbox[3] - bbox[1]);
+            candidates.push({ item, areaApprox });
+          }
+        }
+        candidates.sort((a, b) => a.areaApprox - b.areaApprox);
+
+        const wardMeta = oldSpatialWardsByKey[oldKey];
+        for (const { item } of candidates) {
+          const [soTo, soThua, loaiDat, dienTich, qhTomTat, bbox, gtypeCode, coords] = item;
+          if (pointInGeometry(lng, lat, gtypeCode, coords)) {
+            const geomObj = decodeOldGeometry(gtypeCode, coords);
+            const center = {
+              x: (bbox[0] + bbox[2]) * 0.5,
+              y: (bbox[1] + bbox[3]) * 0.5,
+            };
+            return buildOldParcelResponse(
+              wardMeta,
+              soTo,
+              soThua,
+              loaiDat,
+              dienTich,
+              qhTomTat,
+              geomObj,
+              center,
+            );
+          }
+        }
+        return null;
       }
 
       async function lookupParcelByCoord(wardId, lng, lat) {
@@ -1121,11 +1366,11 @@
       }
 
       async function handleCoordSearch() {
-        const wardId = coordWardSelectEl.value;
+        const wardKey = coordWardSelectEl.value;
         const lng = parseCoordValue(lngInputEl.value);
         const lat = parseCoordValue(latInputEl.value);
 
-        if (!wardId) {
+        if (!wardKey) {
           setStatus("warn", "Chưa có dữ liệu xã để tra cứu tọa độ.");
           return;
         }
@@ -1139,11 +1384,17 @@
         }
 
         coordSearchBtnEl.disabled = true;
-        const wardName = spatialWardsById[wardId]?.address || wardId;
-        setStatus("loading", `Đang dò thửa đất tại (${lng.toFixed(6)}, ${lat.toFixed(6)})...`);
+        const wardName =
+          searchEra === "old"
+            ? oldSpatialWardsByKey[wardKey]?.oldName || wardKey
+            : spatialWardsById[wardKey]?.address || wardKey;
+        setStatus("loading", `Đang dò thửa đất (${wardName}) tại (${lng.toFixed(6)}, ${lat.toFixed(6)})...`);
 
         try {
-          const result = await lookupParcelByCoord(wardId, lng, lat);
+          const result =
+            searchEra === "old"
+              ? await lookupOldParcelByCoord(wardKey, lng, lat)
+              : await lookupParcelByCoord(wardKey, lng, lat);
           if (result && result.found) {
             setStatus(
               "ok",
@@ -1178,11 +1429,11 @@
       }
 
       async function handleSearch() {
-        const wardId = wardSelectEl.value;
+        const wardKey = wardSelectEl.value;
         const sheetRaw = sheetInputEl.value.trim();
         const plotRaw = plotInputEl.value.trim();
 
-        if (!wardId) {
+        if (!wardKey) {
           setStatus("warn", "Vui lòng chọn Xã / Phường.");
           return;
         }
@@ -1197,10 +1448,36 @@
           return;
         }
 
-        const sheet = findSheetInWard(wardId, sheetRaw);
+        if (searchEra === "old") {
+          const sheetName = findOldSheet(wardKey, sheetRaw);
+          if (!sheetName) {
+            const wardName = oldWardsByKey[wardKey]?.oldName || wardKey;
+            setStatus("warn", `Không tìm thấy tờ "${sheetRaw}" trong ${wardName}.`);
+            return;
+          }
+
+          searchBtnEl.disabled = true;
+          setStatus("loading", `Đang nạp dữ liệu trước sáp nhập: Tờ ${sheetName}, thửa ${plotRaw}...`);
+          try {
+            const data = await lookupOldParcelByPlot(wardKey, sheetName, plotRaw);
+            if (data.found) {
+              setStatus("ok", `Tìm thấy thửa ${data.parcel.so_thua} (Tờ ${data.parcel.so_to} - ${oldWardsByKey[wardKey]?.oldName}).`);
+              renderParcel(data);
+            } else {
+              setStatus("warn", `Không tìm thấy thửa ${plotRaw} trong tờ ${sheetName} (${oldWardsByKey[wardKey]?.oldName}).`);
+            }
+          } catch (err) {
+            setStatus("err", `Lỗi tra cứu trước sáp nhập: ${err.message}`);
+          } finally {
+            searchBtnEl.disabled = false;
+          }
+          return;
+        }
+
+        const sheet = findSheetInWard(wardKey, sheetRaw);
         if (!sheet) {
           const wardName =
-            wardSelectEl.options[wardSelectEl.selectedIndex]?.text || wardId;
+            wardSelectEl.options[wardSelectEl.selectedIndex]?.text || wardKey;
           setStatus(
             "warn",
             `Không tìm thấy tờ "${sheetRaw}" trong ${wardName}.`,
@@ -1215,7 +1492,7 @@
         );
 
         try {
-          const data = await lookupParcelDirect(wardId, sheet, plotRaw);
+          const data = await lookupParcelDirect(wardKey, sheet, plotRaw);
 
           if (data.found) {
             setStatus(
@@ -1238,13 +1515,18 @@
 
       wardSelectEl.addEventListener("change", () => {
         updateWardHint();
-        const sheets = sheetsByWard[wardSelectEl.value] || [];
-        const firstWithCenter = sheets.find((s) => Array.isArray(s.center));
-        if (firstWithCenter) {
+        let center = null;
+        if (searchEra === "old") {
+          center = oldWardsByKey[wardSelectEl.value]?.center || null;
+        } else {
+          const sheets = sheetsByWard[wardSelectEl.value] || [];
+          center = sheets.find((s) => Array.isArray(s.center))?.center || null;
+        }
+        if (center) {
           if (prefersReducedMotion()) {
-            map.setView(firstWithCenter.center, 14);
+            map.setView(center, 14);
           } else {
-            map.flyTo(firstWithCenter.center, 14, {
+            map.flyTo(center, 14, {
               duration: 0.85,
               easeLinearity: 0.25,
             });
@@ -1297,19 +1579,42 @@
         ),
       );
 
-      function init() {
-        const data = window.PARCEL_CATALOG;
-        if (!data || !Array.isArray(data.wards)) {
-          catalogInfoEl.textContent = "Lỗi tải danh mục tĩnh.";
-          mobileTopSubEl.textContent = "Lỗi tải danh mục tĩnh";
-          setStatus("err", "Không tìm thấy dữ liệu trong catalog.js.");
+      function populateGroupedOldSelect(selectEl, wards) {
+        selectEl.innerHTML = "";
+        const groups = new Map();
+        wards.forEach((w) => {
+          const groupLabel = `Thuộc ${w.newName} (mới - ${w.newWardId})`;
+          if (!groups.has(groupLabel)) groups.set(groupLabel, []);
+          groups.get(groupLabel).push(w);
+        });
+        for (const [label, items] of groups.entries()) {
+          const optgroup = document.createElement("optgroup");
+          optgroup.label = label;
+          items.forEach((w) => {
+            const opt = document.createElement("option");
+            opt.value = w.oldKey;
+            opt.textContent = `${w.oldName} (${w.oldWardId})`;
+            optgroup.appendChild(opt);
+          });
+          selectEl.appendChild(optgroup);
+        }
+      }
+
+      function populatePlotWardSelect() {
+        if (searchEra === "old") {
+          const oldWards = Object.values(oldWardsByKey);
+          populateGroupedOldSelect(wardSelectEl, oldWards);
+          if (oldWards.length && !oldWardsByKey[wardSelectEl.value]) {
+            wardSelectEl.value = oldWards[0].oldKey;
+          }
+          sheetInputEl.placeholder = "Vd: 10";
+          plotInputEl.placeholder = "Vd: 141";
+          updateWardHint();
           return;
         }
 
-        sheetsByWard = data.sheetsByWard || {};
-        wardsById = Object.fromEntries(data.wards.map((w) => [w.wardId, w]));
-
-        const wards = data.wards
+        const data = window.PARCEL_CATALOG;
+        const wards = (data && Array.isArray(data.wards) ? data.wards : [])
           .slice()
           .sort((a, b) => a.address.localeCompare(b.address, "vi"));
 
@@ -1320,26 +1625,26 @@
           opt.textContent = `${w.address} (${w.wardId})`;
           wardSelectEl.appendChild(opt);
         });
-
-        const summaryText = `${data.totalWards} xã/phường • ${data.totalSheets.toLocaleString("vi-VN")} tờ bản đồ`;
-        catalogInfoEl.textContent = summaryText;
-        mobileTopSubEl.textContent = `${summaryText} • Chạm để tra cứu`;
-
         if (wards.some((w) => w.wardId === "28177")) {
           wardSelectEl.value = "28177";
-          // sheetInputEl.value = "71";
-          // plotInputEl.value = "51";
         }
+        sheetInputEl.placeholder = "Vd: 71 hoặc dc71";
+        plotInputEl.placeholder = "Vd: 51";
         updateWardHint();
       }
 
-      function initSpatialManifest() {
-        const manifest = window.SPATIAL_MANIFEST;
-        const wards = (manifest && Array.isArray(manifest.wards) ? manifest.wards : [])
-          .slice()
-          .sort((a, b) => a.address.localeCompare(b.address, "vi"));
+      function populateCoordWardSelect() {
+        if (searchEra === "old") {
+          const oldWards = Object.values(oldSpatialWardsByKey);
+          populateGroupedOldSelect(coordWardSelectEl, oldWards);
+          if (oldWards.length && !oldSpatialWardsByKey[coordWardSelectEl.value]) {
+            coordWardSelectEl.value = oldWards[0].oldKey;
+          }
+          updateCoordWardHint();
+          return;
+        }
 
-        spatialWardsById = Object.fromEntries(wards.map((w) => [w.wardId, w]));
+        const wards = Object.values(spatialWardsById);
         coordWardSelectEl.innerHTML = "";
         wards.forEach((w) => {
           const opt = document.createElement("option");
@@ -1353,12 +1658,73 @@
         updateCoordWardHint();
       }
 
+      function switchEra(era) {
+        if (era === searchEra) return;
+        searchEra = era === "old" ? "old" : "new";
+        const isOld = searchEra === "old";
+        eraNewBtnEl.classList.toggle("active", !isOld);
+        eraOldBtnEl.classList.toggle("active", isOld);
+        eraNewBtnEl.setAttribute("aria-selected", String(!isOld));
+        eraOldBtnEl.setAttribute("aria-selected", String(isOld));
+        populatePlotWardSelect();
+        populateCoordWardSelect();
+        statusBoxEl.className = "status";
+        statusBoxEl.textContent = "";
+      }
+
+      function init() {
+        const data = window.PARCEL_CATALOG;
+        if (!data || !Array.isArray(data.wards)) {
+          catalogInfoEl.textContent = "Lỗi tải danh mục tĩnh.";
+          mobileTopSubEl.textContent = "Lỗi tải danh mục tĩnh";
+          setStatus("err", "Không tìm thấy dữ liệu trong catalog.js.");
+          return;
+        }
+
+        sheetsByWard = data.sheetsByWard || {};
+        wardsById = Object.fromEntries(data.wards.map((w) => [w.wardId, w]));
+
+        const oldCount = window.OLD_PARCEL_MANIFEST?.totalWards || 0;
+        const summaryText = oldCount
+          ? `${data.totalWards} xã mới + ${oldCount} xã cũ trước sáp nhập`
+          : `${data.totalWards} xã/phường • ${data.totalSheets.toLocaleString("vi-VN")} tờ bản đồ`;
+        catalogInfoEl.textContent = summaryText;
+        mobileTopSubEl.textContent = `${summaryText} • Chạm để tra cứu`;
+
+        populatePlotWardSelect();
+      }
+
+      function initSpatialManifest() {
+        const manifest = window.SPATIAL_MANIFEST;
+        const wards = (manifest && Array.isArray(manifest.wards) ? manifest.wards : [])
+          .slice()
+          .sort((a, b) => a.address.localeCompare(b.address, "vi"));
+
+        spatialWardsById = Object.fromEntries(wards.map((w) => [w.wardId, w]));
+        populateCoordWardSelect();
+      }
+
+      function initOldManifests() {
+        const oldSheets = window.OLD_PARCEL_MANIFEST;
+        const oldWards = oldSheets && Array.isArray(oldSheets.wards) ? oldSheets.wards : [];
+        oldWardsByKey = Object.fromEntries(oldWards.map((w) => [w.oldKey, w]));
+
+        const oldSpatial = window.OLD_SPATIAL_MANIFEST;
+        const oldSpWards = oldSpatial && Array.isArray(oldSpatial.wards) ? oldSpatial.wards : [];
+        oldSpatialWardsByKey = Object.fromEntries(oldSpWards.map((w) => [w.oldKey, w]));
+      }
+
+      eraNewBtnEl.addEventListener("click", () => switchEra("new"));
+      eraOldBtnEl.addEventListener("click", () => switchEra("old"));
       tabPlotBtnEl.addEventListener("click", () => switchSearchTab("plot"));
       tabCoordBtnEl.addEventListener("click", () => switchSearchTab("coord"));
 
       coordWardSelectEl.addEventListener("change", () => {
         updateCoordWardHint();
-        const w = spatialWardsById[coordWardSelectEl.value];
+        const w =
+          searchEra === "old"
+            ? oldSpatialWardsByKey[coordWardSelectEl.value]
+            : spatialWardsById[coordWardSelectEl.value];
         if (w && Array.isArray(w.center)) {
           if (prefersReducedMotion()) {
             map.setView(w.center, 14);
@@ -1461,7 +1827,10 @@
               gpsMarker.openTooltip();
               const wardId = coordWardSelectEl.value;
               if (wardId && lng >= 100 && lng <= 112 && lat >= 8 && lat <= 24) {
-                const res = await lookupParcelByCoord(wardId, lng, lat);
+                const res =
+                  searchEra === "old"
+                    ? await lookupOldParcelByCoord(wardId, lng, lat)
+                    : await lookupParcelByCoord(wardId, lng, lat);
                 if (res && res.found) {
                   setStatus(
                     "ok",
@@ -1569,6 +1938,7 @@
         new ResizeObserver(refreshMapSize).observe(mapWrapEl);
       }
 
+      initOldManifests();
       init();
       initSpatialManifest();
     </script>

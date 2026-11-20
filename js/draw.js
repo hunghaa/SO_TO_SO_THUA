@@ -100,8 +100,8 @@ function renderDrawPreview() {
         icon: L.divIcon({
           className: "draw-vertex-icon",
           html: '<span class="draw-midpoint-dot" title="Kéo hoặc chạm để thêm đỉnh trên cạnh này"></span>',
-          iconSize: [12, 12],
-          iconAnchor: [6, 6],
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
         }),
       }).addTo(drawLayerGroup);
 
@@ -144,8 +144,8 @@ function renderDrawPreview() {
       icon: L.divIcon({
         className: "draw-vertex-icon",
         html: `<span class="draw-vertex-dot${isFirstFresh ? " is-first" : ""}"></span>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8],
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
       }),
     }).addTo(drawLayerGroup);
 
@@ -175,6 +175,18 @@ function renderDrawPreview() {
       popupWrap.className = "draw-vertex-popup";
       const label = document.createElement("span");
       label.textContent = `Đỉnh #${idx + 1}`;
+      popupWrap.appendChild(label);
+      if (drawPoints.length >= 3) {
+        const finishBtn = document.createElement("button");
+        finishBtn.type = "button";
+        finishBtn.className = "draw-vertex-finish-btn";
+        finishBtn.textContent = "✓ Xong";
+        finishBtn.addEventListener("click", (btnEv) => {
+          btnEv.stopPropagation();
+          finishDrawing();
+        });
+        popupWrap.appendChild(finishBtn);
+      }
       const delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.className = "draw-vertex-delete-btn";
@@ -183,7 +195,7 @@ function renderDrawPreview() {
         btnEv.stopPropagation();
         deleteDrawVertex(idx);
       });
-      popupWrap.append(label, delBtn);
+      popupWrap.appendChild(delBtn);
       marker
         .bindPopup(popupWrap, { closeButton: false, offset: [0, -6] })
         .openPopup();

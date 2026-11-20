@@ -469,32 +469,25 @@
         </button>
       </div>
       <div class="map-tools-bar" role="toolbar" aria-label="Công cụ bản đồ">
-        <button id="mapDrawToolBtn" class="map-tool-pill" type="button">
-          <svg
-            viewBox="0 0 24 24"
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.1"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M12 20h9"></path>
-            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
-          </svg>
-          <span>Vẽ polygon</span>
+        <button
+          id="mapDrawToolBtn"
+          class="map-tool-pill"
+          type="button"
+          title="Tự vẽ ranh thửa mới màu xanh dương trên ảnh vệ tinh"
+        >
+          <span class="paste-dot-blue" aria-hidden="true"></span>
+          <span>Vẽ thửa mới</span>
         </button>
         <button
           id="mapPasteToolBtn"
           class="map-tool-pill is-red"
           type="button"
+          title="Nhập chuỗi tọa độ WKT/GeoJSON có sẵn để soi màu đỏ đối chiếu"
           aria-expanded="false"
           aria-controls="pasteOverlayCard"
         >
           <span class="paste-dot-red" aria-hidden="true"></span>
-          <span>Dán polygon (Đỏ)</span>
+          <span>Soi Polygon</span>
         </button>
         <button
           id="clearDrawnShapeBtn"
@@ -509,19 +502,19 @@
         id="pasteOverlayCard"
         class="paste-overlay-card"
         role="dialog"
-        aria-label="Dán Polygon đối chiếu màu đỏ"
+        aria-label="Soi và đối chiếu Polygon màu đỏ"
         hidden
       >
         <div class="paste-overlay-header">
           <div class="paste-overlay-title">
             <span class="paste-dot-red" aria-hidden="true"></span>
-            <span>Đối chiếu Polygon (Màu đỏ)</span>
+            <span>Soi / Đối chiếu Polygon (Đỏ)</span>
           </div>
           <button
             id="closePasteCardBtn"
             class="mobile-close-btn"
             type="button"
-            aria-label="Đóng khung dán polygon"
+            aria-label="Đóng khung soi polygon"
           >
             ✕
           </button>
@@ -529,19 +522,27 @@
         <textarea
           id="pastePolyInput"
           class="geo-text"
-          placeholder='Dán POLYGON ((106.62... 10.62...)) hoặc {"type":"Polygon",...} để vẽ màu đỏ đối chiếu'
+          placeholder='Nhập POLYGON ((...)) hoặc GeoJSON từ Excel để kiểm tra vị trí...'
         ></textarea>
         <div id="pasteOverlayStatus" class="paste-overlay-status">
-          Dán xong tự động bay tới (giữ nguyên thửa xanh để đối chiếu).
+          Tự động bay tới &amp; vẽ màu đỏ để đối chiếu cùng thửa trên bản đồ.
         </div>
         <div class="coord-sub-actions">
           <button id="pastePolyRunBtn" class="btn btn-red" type="button">
-            Vẽ đỏ &amp; Bay tới
+            Hiển thị (Đỏ)
           </button>
           <button id="pastePolyClearBtn" class="btn btn-outline" type="button">
             Xóa lớp đỏ
           </button>
         </div>
+        <button
+          id="pasteFindUnderBtn"
+          class="btn btn-outline"
+          type="button"
+          hidden
+        >
+          Dò thửa đất tại vị trí này
+        </button>
       </div>
       <button
         id="mapFullscreenBtn"

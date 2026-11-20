@@ -108,6 +108,7 @@ const pasteOverlayStatusEl = document.getElementById("pasteOverlayStatus");
 const pastePolyInputEl = document.getElementById("pastePolyInput");
 const pastePolyRunBtnEl = document.getElementById("pastePolyRunBtn");
 const pastePolyClearBtnEl = document.getElementById("pastePolyClearBtn");
+const pasteFindUnderBtnEl = document.getElementById("pasteFindUnderBtn");
 const statusBoxEl = document.getElementById("statusBox");
 const catalogInfoEl = document.getElementById("catalogInfo");
 const geoOutputEl = document.getElementById("geoOutput");
@@ -1328,6 +1329,7 @@ pastePolyClearBtnEl.addEventListener("click", () => {
   clearPastedOverlay();
   pastePolyInputEl.focus();
 });
+pasteFindUnderBtnEl.addEventListener("click", findParcelUnderPastedPolygon);
 pastePolyInputEl.addEventListener("paste", () => {
   setTimeout(handlePastePolygon, 20);
 });

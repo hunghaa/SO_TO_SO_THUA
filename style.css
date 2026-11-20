@@ -305,8 +305,18 @@ body.map-drawing .map-draw-banner {
 .draw-vertex-dot.is-first {
   width: 16px;
   height: 16px;
-  border-color: #16a34a;
-  background: #dcfce7;
+  border-color: #ffffff;
+  background: #2563eb;
+  box-shadow: 0 0 0 2px #1d4ed8, 0 2px 6px rgba(37, 99, 235, 0.45);
+}
+
+.paste-dot-blue {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  flex-shrink: 0;
 }
 
 .draw-midpoint-dot {

@@ -1,4 +1,6 @@
-/** Lớp dán Polygon độc lập (màu đỏ) dùng để đối chiếu trực quan với thửa đang tra. */
+/** Lớp Soi / Đối chiếu Polygon độc lập (màu đỏ) dùng để kiểm tra với thửa hành chính bên dưới. */
+
+let lastPastedCenter = null;
 
 function setPasteOverlayStatus(type, text) {
   pasteOverlayStatusEl.className = "paste-overlay-status";
@@ -21,9 +23,11 @@ function togglePasteOverlayCard(forceOpen = null) {
 function clearPastedOverlay() {
   pastedOverlayGroup.clearLayers();
   pastePolyInputEl.value = "";
+  lastPastedCenter = null;
+  if (pasteFindUnderBtnEl) pasteFindUnderBtnEl.hidden = true;
   setPasteOverlayStatus(
     "",
-    "Dán xong tự động bay tới (giữ nguyên thửa xanh để đối chiếu).",
+    "Tự động bay tới & vẽ màu đỏ để đối chiếu cùng thửa trên bản đồ.",
   );
 }
 
@@ -32,7 +36,7 @@ function handlePastePolygon() {
   if (!raw) {
     setPasteOverlayStatus(
       "err",
-      "Vui lòng dán chuỗi POLYGON (...) hoặc GeoJSON.",
+      "Nhập chuỗi POLYGON ((...)) hoặc GeoJSON để hiển thị lên bản đồ.",
     );
     pastePolyInputEl.focus();
     return;
@@ -48,6 +52,10 @@ function handlePastePolygon() {
   const { geometry, props } = parsed;
   const areaM2 = Math.round(computeGeometryAreaM2(geometry) * 10) / 10;
   const center = computeGeometryCenter(geometry);
+  lastPastedCenter = center;
+  if (pasteFindUnderBtnEl) {
+    pasteFindUnderBtnEl.hidden = !(center && center.x != null && center.y != null);
+  }
 
   pastedOverlayGroup.clearLayers();
   const redLayer = L.geoJSON(
@@ -90,5 +98,53 @@ function handlePastePolygon() {
     "ok",
     `Đã vẽ lớp đỏ (~${formatNumber(areaM2)} m²) • Tâm: ${centerText}`,
   );
+}
+
+/** Dò thửa đất hành chính đang nằm bên dưới tâm của Polygon màu đỏ vừa soi. */
+async function findParcelUnderPastedPolygon() {
+  if (!lastPastedCenter || lastPastedCenter.x == null || lastPastedCenter.y == null) {
+    setPasteOverlayStatus("err", "Hãy hiển thị một Polygon hợp lệ trước khi dò thửa bên dưới.");
+    return;
+  }
+  const { x: lng, y: lat } = lastPastedCenter;
+  pasteFindUnderBtnEl.disabled = true;
+  setPasteOverlayStatus(
+    "",
+    `Đang dò thửa đất tại tâm (${lng.toFixed(6)}, ${lat.toFixed(6)})...`,
+  );
+  try {
+    const result = await autoLookupCoordAcrossWards(searchEra, lng, lat);
+    if (result && result.found) {
+      const matchedWard = result.meta?.wardKey || "__all__";
+      result.meta = {
+        ...(result.meta || {}),
+        share: {
+          era: searchEra,
+          mode: "coord",
+          ward: matchedWard,
+          lng: lng.toFixed(6),
+          lat: lat.toFixed(6),
+        },
+      };
+      setStatus(
+        "ok",
+        `Tìm thấy thửa ${result.parcel.so_thua} (tờ ${result.parcel.so_to} - ${result.parcel.xa_phuong}) bên dưới Polygon đỏ.`,
+      );
+      renderParcel(result, true);
+      setPasteOverlayStatus(
+        "ok",
+        `Đã chồng thửa ${result.parcel.so_thua} (Tờ ${result.parcel.so_to} - ${result.parcel.xa_phuong}) bên dưới để đối chiếu.`,
+      );
+    } else {
+      setPasteOverlayStatus(
+        "err",
+        `Không tìm thấy thửa đất nào tại tâm (${lng.toFixed(6)}, ${lat.toFixed(6)}).`,
+      );
+    }
+  } catch (err) {
+    setPasteOverlayStatus("err", `Lỗi dò thửa đất: ${err.message}`);
+  } finally {
+    pasteFindUnderBtnEl.disabled = false;
+  }
 }
 
